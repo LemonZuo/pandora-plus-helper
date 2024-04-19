@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  pandora-plus-helper:
+    image: your_user_name/pandora-plus-helper:latest
+    container_name: pandora-plus-helper
+    restart: always
+    ports:
+      - "8182:8182"
+    environment:
+      - TZ=Asia/Shanghai
+      - SHARE_TOKEN_AUTH=https://xxx.xxx.com  # 反代oaifree的地址，不配置则为：https://new.oaifree.com
+      - ADMIN_PASSWORD=T7qh5sd7hC4aDk4Z # 管理员密码，登录后台使用, 不配置，启动是会自动生成一个随机密码，在日志中查看
+    volumes:
+      - ./data:/data # 映射数据目录
