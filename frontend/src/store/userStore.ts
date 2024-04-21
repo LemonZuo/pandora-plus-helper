@@ -60,10 +60,10 @@ export const useSignIn = () => {
   const signIn = async (data: SignInReq) => {
     try {
       const res = await signInMutation.mutateAsync(data);
-      // type: String = res.type;
-      data
       const { type, user, accessToken, loginUrl  } = res;
-      if (type === 1) {
+      if (type === 1 && loginUrl) {
+        window.location.href = loginUrl
+      } else if (type === 2) {
         setUserToken({ accessToken });
         // 固定一个用户信息 Admin
         setUserInfo(user);
@@ -74,8 +74,6 @@ export const useSignIn = () => {
           description: `${t('sys.login.loginSuccessDesc')}`,
           duration: 3,
         });
-      } else if (type === 2 && loginUrl) {
-        window.location.href = loginUrl
       }
 
     } catch (err) {

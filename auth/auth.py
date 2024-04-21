@@ -49,6 +49,18 @@ def auth():
         return ApiResponse.error('Captcha is failed', 401)
 
     if type == 1:
+        account = db.session.query(Account).filter_by(password=password).first()
+        if not account:
+            # 账号不存在
+            return ApiResponse.error('login failed！', 401)
+        else:
+            res = share_token_login(account.share_token)
+            login_url = res.get('login_url')
+            if not login_url:
+                logger.error('login failed！, login_url is None')
+                return ApiResponse.error('login failed！', 401)
+            return ApiResponse.success(data={'type': 1, 'access_token': None, 'user': None, 'login_url': login_url})
+    elif type == 2:
         admin_password = current_app.config['admin_password']
         if password == admin_password:
             user = {
@@ -60,22 +72,9 @@ def auth():
                 'permissions': PERMISSION_LIST,
             }
             access_token = create_access_token(identity='admin', expires_delta=datetime.timedelta(days=3))
-            return ApiResponse.success(data={'type': 1, 'access_token': access_token, 'user': user, 'login_url': None})
+            return ApiResponse.success(data={'type': 2, 'access_token': access_token, 'user': user, 'login_url': None})
         else:
             return ApiResponse.error('login failed！', 401)
-    elif type == 2:
-        account = db.session.query(Account).filter_by(password=password).first()
-        if not account:
-            # 账号不存在
-            return ApiResponse.error('login failed！', 401)
-        else:
-            res = share_token_login(account.share_token)
-            login_url = res.get('login_url')
-            if not login_url:
-                logger.error('login failed！, login_url is None')
-                return ApiResponse.error('login failed！', 401)
-            return ApiResponse.success(data={'type': 2, 'access_token': None, 'user': None, 'login_url': login_url})
-
 
 DASHBOARD_PERMISSION = {
     'id': '9710971640510357',

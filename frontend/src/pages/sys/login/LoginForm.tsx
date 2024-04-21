@@ -8,15 +8,15 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 function LoginForm() {
   const { t } = useTranslation();
-  const [form] = Form.useForm();
+  const [oauthForm] = Form.useForm();
+  const [managerForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | undefined>(undefined);
 
   const captchaSiteKey = useCaptchaSiteKey();
   const signIn = useSignIn();
 
-  const handleManagerLogin = async ({ password }: SignInReq) => {
-    console.log(captchaToken);
+  const handleOAuthLogin = async ({ password }: SignInReq) => {
     setLoading(true);
     try {
       await signIn({ type: 1, password, token: captchaToken });
@@ -25,8 +25,7 @@ function LoginForm() {
     }
   };
 
-  const handleOAuthLogin = async ({ password }: SignInReq) => {
-    console.log(captchaToken);
+  const handleManagerLogin = async ({ password }: SignInReq) => {
     setLoading(true);
     try {
       await signIn({ type: 2, password, token: captchaToken });
@@ -40,7 +39,7 @@ function LoginForm() {
       <Tabs.TabPane tab={t('sys.login.oauthLogin')} key="1">
         <>
           <Form
-            form={form}
+            form={oauthForm}
             name="oauth_login"
             size="large"
             onFinish={handleOAuthLogin}
@@ -69,7 +68,7 @@ function LoginForm() {
       <Tabs.TabPane tab={t('sys.login.managerLogin')} key="2">
         <>
           <Form
-            form={form}
+            form={managerForm}
             name="manager_login"
             size="large"
             onFinish={handleManagerLogin}

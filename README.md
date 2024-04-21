@@ -6,7 +6,7 @@
 > https://linux.do/t/topic/62047
 
 ## 部分截图
-![img.png](doc/index.png)
+![img.png](doc/login.png)
 ![img.png](doc/token.png)
 ![img.png](doc/token_statistic.png)
 ![img.png](doc/account.png)
