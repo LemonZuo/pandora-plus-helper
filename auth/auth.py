@@ -1,14 +1,23 @@
 import datetime
 
 import requests
-from flask import request, current_app, Blueprint
+from flask import request, current_app, Blueprint, Flask, jsonify
 from flask_jwt_extended import create_access_token
-from model import db, Account
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from loguru import logger
 
+from model import db, Account
 from util.api_response import ApiResponse
 from util.share_tools import share_token_login
 
 auth_bp = Blueprint("auth", __name__)
+app = Flask(__name__)
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,  # 使用客户端IP作为限流的键
+    default_limits=["50 per day", "25 per hour"]
+)
 
 
 def validate_hcaptcha_response(token):
@@ -23,8 +32,15 @@ def validate_hcaptcha_response(token):
     return result['success']
 
 
-@auth_bp.route('/auth', methods=['POST'])
+# 自定义429错误响应
+@auth_bp.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"status": 429, "message": "request too frequently, please wait!!!"}), 429
+
+
 # 使用Jwt登录
+@auth_bp.route('/auth', methods=['POST'])
+@limiter.limit("5 per minute")
 def auth():
     password = request.json.get('password')
     token = request.json.get('token')
@@ -55,6 +71,9 @@ def auth():
         else:
             res = share_token_login(account.share_token)
             login_url = res.get('login_url')
+            if not login_url:
+                logger.error('login failed！, login_url is None')
+                return ApiResponse.error('login failed！', 401)
             return ApiResponse.success(data={'type': 2, 'access_token': None, 'user': None, 'login_url': login_url})
 
 

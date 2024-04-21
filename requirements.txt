@@ -20,6 +20,7 @@ Flask-Migrate==4.0.5
 Flask-Moment==1.0.5
 Flask-SQLAlchemy==3.1.1
 Flask-WTF==1.2.1
+Flask-Limiter==1.4
 greenlet==3.0.3
 idna==3.6
 itsdangerous==2.1.2
