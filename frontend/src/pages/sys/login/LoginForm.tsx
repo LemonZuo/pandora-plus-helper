@@ -1,11 +1,10 @@
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, Tabs } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SignInReq } from '@/api/services/userService';
 import { useSignIn } from '@/store/userStore';
-import {useCaptchaSiteKey} from "@/store/settingStore.ts";
+import { useCaptchaSiteKey } from "@/store/settingStore";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
-
 
 function LoginForm() {
   const { t } = useTranslation();
@@ -14,50 +13,89 @@ function LoginForm() {
   const [captchaToken, setCaptchaToken] = useState<string | undefined>(undefined);
 
   const captchaSiteKey = useCaptchaSiteKey();
-
   const signIn = useSignIn();
 
-  const handleFinish = async ({ password }: SignInReq) => {
+  const handleManagerLogin = async ({ password }: SignInReq) => {
     console.log(captchaToken);
     setLoading(true);
     try {
-      await signIn({ password, token: captchaToken });
+      await signIn({ type: 1, password, token: captchaToken });
     } finally {
       setLoading(false);
     }
   };
-  // @ts-ignore
+
+  const handleOAuthLogin = async ({ password }: SignInReq) => {
+    console.log(captchaToken);
+    setLoading(true);
+    try {
+      await signIn({ type: 2, password, token: captchaToken });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <>
-      <div className="mb-4 text-2xl font-bold xl:text-3xl">{t('sys.login.signInFormTitle')}</div>
-      <Form
-        form={form}
-        name="login"
-        size="large"
-        onFinish={handleFinish}
-      >
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: t('sys.login.passwordPlaceholder') }]}
-        >
-          <Input.Password type="password" placeholder={t('sys.login.password')} />
-        </Form.Item>
-        {captchaSiteKey &&
-          <div className="flex flex-row justify-center">
+    <Tabs defaultActiveKey="1" centered>
+      <Tabs.TabPane tab={t('sys.login.oauthLogin')} key="1">
+        <>
+          <Form
+            form={form}
+            name="oauth_login"
+            size="large"
+            onFinish={handleOAuthLogin}
+          >
             <Form.Item
-              name="token"
+              name="password"
+              rules={[{ required: true, message: t('sys.login.passwordPlaceholder') }]}
             >
-              <HCaptcha sitekey={captchaSiteKey} onVerify={setCaptchaToken}/>
+              <Input.Password placeholder={t('sys.login.password')} autoFocus/>
             </Form.Item>
-          </div>
-        }
-        <Form.Item>
-          <Button type="primary" htmlType="submit" className="w-full" loading={loading}>
-            {t('sys.login.loginButton')}
-          </Button>
-        </Form.Item>
-      </Form>
-    </>
+            {captchaSiteKey &&
+              <div className="flex flex-row justify-center">
+                <Form.Item name="token">
+                  <HCaptcha sitekey={captchaSiteKey} onVerify={setCaptchaToken} />
+                </Form.Item>
+              </div>
+            }
+            <Form.Item>
+              <Button type="primary" htmlType="submit" className="w-full" loading={loading}>
+                {t('sys.login.loginButton')}
+              </Button>
+            </Form.Item>
+          </Form>
+        </>
+      </Tabs.TabPane>
+      <Tabs.TabPane tab={t('sys.login.managerLogin')} key="2">
+        <>
+          <Form
+            form={form}
+            name="manager_login"
+            size="large"
+            onFinish={handleManagerLogin}
+          >
+            <Form.Item
+              name="password"
+              rules={[{ required: true, message: t('sys.login.passwordPlaceholder') }]}
+            >
+              <Input.Password placeholder={t('sys.login.password')} autoFocus/>
+            </Form.Item>
+            {captchaSiteKey &&
+              <div className="flex flex-row justify-center">
+                <Form.Item name="token">
+                  <HCaptcha sitekey={captchaSiteKey} onVerify={setCaptchaToken} />
+                </Form.Item>
+              </div>
+            }
+            <Form.Item>
+              <Button type="primary" htmlType="submit" className="w-full" loading={loading}>
+                {t('sys.login.loginButton')}
+              </Button>
+            </Form.Item>
+          </Form>
+        </>
+      </Tabs.TabPane>
+    </Tabs>
   );
 }
 

@@ -4,6 +4,7 @@ import {UserInfo} from "#/entity.ts";
 // import {UserInfo, UserToken} from '#/entity';
 
 export interface SignInReq {
+  type: number;
   password: string;
   token?: string
 }
@@ -17,7 +18,7 @@ export type SignInRes = {
 };
 
 export enum UserApi {
-  SignIn = 'login2',
+  SignIn = 'auth',
   // SignIn = '/auth/signin',
   Logout = '/auth/logout',
 }

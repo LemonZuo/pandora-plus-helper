@@ -19,7 +19,7 @@ import oai_token
 import account
 import sys_info
 from util.api_response import ApiResponse
-from util.pandora_plus_tools import set_share_token_auth
+from util.share_tools import set_share_token_auth
 
 # 加载当前目录下的 .env 文件
 load_dotenv()

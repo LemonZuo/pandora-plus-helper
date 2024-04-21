@@ -24,7 +24,7 @@ type AccountStatistic = {
   categories: string[]
 }
 
-const getAccountStatistic = (accountId: number) => apiClient.post<AccountStatistic>({ url: AccountApi.statistic, data: { accountId } });
+const getAccountStatistic = (tokenId: number) => apiClient.post<AccountStatistic>({ url: AccountApi.statistic, data: { tokenId } });
 
 export default {
   getAccountList,

@@ -6,10 +6,7 @@ from flask_jwt_extended import create_access_token
 from model import db, Account
 
 from util.api_response import ApiResponse
-
-from util.pandora_plus_tools import share_token_login
-
-from loguru import logger
+from util.share_tools import share_token_login
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -26,27 +23,31 @@ def validate_hcaptcha_response(token):
     return result['success']
 
 
-@auth_bp.route('/login2', methods=['POST'])
+@auth_bp.route('/auth', methods=['POST'])
 # 使用Jwt登录
-def login2():
+def auth():
     password = request.json.get('password')
     token = request.json.get('token')
+    type = request.json.get('type')
     if current_app.config['captcha_enabled'] and not validate_hcaptcha_response(token):
         return ApiResponse.error('Captcha is failed', 401)
-    admin_password = current_app.config['admin_password']
-    logger.info(f"login2: {password}, {admin_password}")
-    if password == admin_password:
-        user = {
-            'id': 1,
-            'username': 'admin',
-            'email': 'admin@uasm.com',
-            'role': ADMIN_ROLE,
-            'status': 1,
-            'permissions': PERMISSION_LIST,
-        }
-        access_token = create_access_token(identity='admin', expires_delta=datetime.timedelta(days=3))
-        return ApiResponse.success(data={'type':1, 'access_token': access_token, 'user': user, 'login_url': None})
-    else:
+
+    if type == 1:
+        admin_password = current_app.config['admin_password']
+        if password == admin_password:
+            user = {
+                'id': 1,
+                'username': 'admin',
+                'email': 'admin@uasm.com',
+                'role': ADMIN_ROLE,
+                'status': 1,
+                'permissions': PERMISSION_LIST,
+            }
+            access_token = create_access_token(identity='admin', expires_delta=datetime.timedelta(days=3))
+            return ApiResponse.success(data={'type': 1, 'access_token': access_token, 'user': user, 'login_url': None})
+        else:
+            return ApiResponse.error('login failed！', 401)
+    elif type == 2:
         account = db.session.query(Account).filter_by(password=password).first()
         if not account:
             # 账号不存在
@@ -54,9 +55,7 @@ def login2():
         else:
             res = share_token_login(account.share_token)
             login_url = res.get('login_url')
-            return ApiResponse.success(data={'type':2, 'access_token': '', 'user': None, 'login_url': login_url})
-
-
+            return ApiResponse.success(data={'type': 2, 'access_token': None, 'user': None, 'login_url': login_url})
 
 
 DASHBOARD_PERMISSION = {

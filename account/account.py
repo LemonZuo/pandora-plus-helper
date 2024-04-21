@@ -8,7 +8,7 @@ from loguru import logger
 from model import db, Token, Account
 from util import share_tools
 from util.api_response import ApiResponse
-from util.pandora_plus_tools import gen_share_token
+from util.share_tools import gen_share_token
 
 account_bp = Blueprint('account_bp', __name__)
 
@@ -42,7 +42,6 @@ def search():
         accounts = db.session.query(Account).all()
 
     return ApiResponse.success(accounts)
-
 
 
 @account_bp.route('/add', methods=['POST'])
@@ -93,6 +92,20 @@ def share_add():
 def share_delete():
     id = request.json.get('id')
     account = db.session.query(Account).filter_by(id=id).first()
+    if not account:
+        return ApiResponse.error('账号不存在')
+    token = db.session.query(Token).filter_by(id=account.token_id).first()
+    if not token:
+        return ApiResponse.error('令牌不存在')
+    if not token.access_token:
+        return ApiResponse.error('请先登录账号')
+    else:
+        try:
+            res = gen_share_token(token.access_token, account.account, -1)
+            logger.info(res)
+        except Exception as e:
+            logger.error(e)
+            return ApiResponse.error('删除分享用户失败')
     db.session.delete(account)
     db.session.commit()
     return ApiResponse.success({})
@@ -142,21 +155,21 @@ def share_update():
 @account_bp.route('/statistic', methods=['POST'])
 @jwt_required()
 def share_info():
-    user_id = request.json.get('account_id')
-    user = db.session.query(Token).filter_by(id=user_id).first()
+    token_id = request.json.get('token_id')
+    token = db.session.query(Token).filter_by(id=token_id).first()
 
-    if user.access_token is None:
+    if token.access_token is None:
         return ApiResponse.error('请先登录账号')
-    share_list = json.loads(user.share_list)
-    unique_names = list(map(lambda x: x['unique_name'], share_list))
+    accounts = db.session.query(Account).filter_by(token_id=token_id).all()
+    unique_names = list(map(lambda x: x['account'], accounts))
     info_list = {}
-    for share in share_list:
+    for account in accounts:
         try:
-            info = share_tools.get_share_token_info(share['share_token'], user.access_token)
+            info = share_tools.get_share_token_info(account.share_token, token.access_token)
         except Exception as e:
             logger.error(e)
             return ApiResponse.error('获取分享用户信息失败, 请检查access_token是否有效')
-        info_list[share['unique_name']] = info
+        info_list[account.account] = info
 
     models = []
     # 取出所有的model

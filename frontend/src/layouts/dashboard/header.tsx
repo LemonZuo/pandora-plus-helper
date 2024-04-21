@@ -73,7 +73,7 @@ export default function Header({ className = '', offsetTop = false }: Props) {
           <div className="flex">
             <SearchBar />
             <LocalePicker />
-            <IconButton onClick={() => window.open('https://github.com/nianhua99/PandoraNext-Helper')}>
+            <IconButton onClick={() => window.open('https://github.com/LemonZuo/pandora-plus-helper')}>
               <Iconify icon="mdi:github" size={24} />
             </IconButton>
             <SettingButton />

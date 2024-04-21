@@ -21,7 +21,7 @@ import {
   CaretRightFilled,
   DeleteOutlined,
   EditOutlined,
-  // FundOutlined,
+  FundOutlined,
   PauseCircleFilled,
   PlusOutlined,
   ReloadOutlined,
@@ -116,7 +116,7 @@ export default function TokenPage() {
   });
 
   const [shareInfoModalProps, setAccountInfoModalProps] = useState<AccountInfoModalProps>({
-    accountId: -1,
+    tokenId: -1,
     show: false,
     onOk: () => {
       setAccountInfoModalProps((prev) => ({...prev, show: false}));
@@ -199,7 +199,7 @@ export default function TokenPage() {
             </Button>
           </Badge>
           <Button icon={<PlusOutlined />} onClick={() => onAccountAdd(record)}/>
-          {/*<Button icon={<FundOutlined />} onClick={() => onAccountInfo(record)}/>*/}
+          <Button icon={<FundOutlined />} onClick={() => onAccountInfo(record)}/>
         </Button.Group>
       ),
     },
@@ -292,14 +292,14 @@ export default function TokenPage() {
     }));
   }
 
-  // const onAccountInfo = (record: Token) => {
-  //   setAccountInfoModalProps((prev) => ({
-  //     ...prev,
-  //     show: true,
-  //     isEdit: false,
-  //     accountId: record.id,
-  //   }));
-  // }
+  const onAccountInfo = (record: Token) => {
+    setAccountInfoModalProps((prev) => ({
+      ...prev,
+      show: true,
+      isEdit: false,
+      tokenId: record.id,
+    }));
+  }
 
   const onEdit = (record: Token) => {
     console.log(record);
@@ -473,16 +473,16 @@ function TokenModal({title, show, formValue, onOk, onCancel}: TokenModalProps) {
 }
 
 type AccountInfoModalProps = {
-  accountId: number
+  tokenId: number
   onOk: VoidFunction
   show: boolean;
 }
 
-const AccountInfoModal = ({accountId, onOk, show}: AccountInfoModalProps) => {
+const AccountInfoModal = ({tokenId, onOk, show}: AccountInfoModalProps) => {
 
   const {data: statistic, isLoading} = useQuery({
-    queryKey: ['shareInfo', accountId],
-    queryFn: () => accountService.getAccountStatistic(accountId),
+    queryKey: ['shareInfo', tokenId],
+    queryFn: () => accountService.getAccountStatistic(tokenId),
     enabled: show,
   })
 

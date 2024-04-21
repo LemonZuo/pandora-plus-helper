@@ -29,6 +29,8 @@
       "mobileSignInFormTitle": "Mobile sign in",
       "qrSignInFormTitle": "Qr code sign in",
       "signInFormTitle": "Sign in",
+      "managerLogin": "Manager Login",
+      "oauthLogin": "Chat Login",
       "signUpFormTitle": "Sign up",
       "forgetFormTitle": "Reset password",
 

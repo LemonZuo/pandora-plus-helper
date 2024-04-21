@@ -1,13 +1,10 @@
 from datetime import datetime, timedelta
-
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from loguru import logger
-
 from model import db, Token
 from util.api_response import ApiResponse
-from util.pandora_plus_tools import gen_access_token
-from util.pandora_plus_token_tools import refresh_by_token_id
+from util.pandora_plus_tools import gen_access_token, refresh_by_token_id
 
 token_bp = Blueprint('token_bp', __name__)
 

@@ -29,7 +29,7 @@ export default function BannerCard() {
           style={{ color: themeToken.colorPrimaryActive }}
         >
           <h4>{t('common.welcomeBack')} </h4>
-          <h4>PandoraPlus Helper</h4>
+          <h4>Pandora Plus Helper</h4>
         </div>
         <p
           style={{ color: themeToken.colorPrimaryTextActive }}
