@@ -9,4 +9,4 @@
 ![img.png](doc/index.png)
 ![img.png](doc/token.png)
 ![img.png](doc/token_statistic.png)
-![img.png](doc/img.png)
+![img.png](doc/account.png)
