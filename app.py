@@ -15,7 +15,7 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate, upgrade
 from flask_moment import Moment
 
-import oai_token
+import tokens
 import account
 import sys_info
 from util.api_response import ApiResponse
@@ -166,7 +166,7 @@ def catch_all(path):
 
 def create_app():
     app.register_blueprint(auth.auth_bp, url_prefix='/api')
-    app.register_blueprint(oai_token.token_bp, url_prefix='/api/token')
+    app.register_blueprint(tokens.token_bp, url_prefix='/api/token')
     app.register_blueprint(account.account_bp, url_prefix='/api/account')
     app.register_blueprint(sys_info.sys_info_bp, url_prefix='/api/sys_info')
     app.jinja_env.filters['datetime'] = format_datetime
