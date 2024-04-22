@@ -104,18 +104,23 @@ def account_refresh():
 
 
 def refresh_all_user():
+    logger.info('开始定时刷新')
+
     from app import scheduler
     flag = False
     with scheduler.app.app_context():
         tokens = db.session.query(Token).all()
+        logger.info(f'共有{len(tokens)}个token')
 
         for token in tokens:
             try:
                 # 检查 rt 是否存在
                 if not token.refresh_token:
+                    logger.error(f'{token.token_name} 不存在refresh_token')
                     continue
                 # 判断at是否过期
                 if token.expire_at > datetime.now():
+                    logger.info(f'{token.token_name} 未过期')
                     continue
                 flag = True
                 refresh_by_token_id(token.id)
@@ -123,6 +128,8 @@ def refresh_all_user():
                 logger.error(e)
         if flag:
             logger.info('刷新成功')
+
+        logger.info('定时刷新结束')
 
 
 @token_bp.route('/start', methods=['post'])
