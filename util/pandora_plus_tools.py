@@ -28,7 +28,7 @@ def refresh_by_token_id(token_id):
         return
     for account in accounts:
         try:
-            res = gen_share_token(token.access_token, account.account)
+            res = gen_share_token(access_token=token.access_token, unique_name=account.account, gpt35_limit=account.gpt35_limit, gpt4_limit=account.gpt4_limit, show_conversations=account.show_conversations)
             expire_at = datetime.fromtimestamp(res.get('expire_at'))
             # 检查expire_at的类型是否正确
             if not isinstance(expire_at, datetime):

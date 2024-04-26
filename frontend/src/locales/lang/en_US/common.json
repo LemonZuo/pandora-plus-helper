@@ -23,7 +23,9 @@
     "deleteConfirm": "Delete the Account",
     "welcomeBack": "Welcome back \uD83D\uDC4B",
     "desc": "Manage your PandoraNext account and token in 1 place.",
-    "goNow": "Go Now"
+    "goNow": "Go Now",
+    "yes": "Yes",
+    "no": "No"
   },
   "%namespace%:password": "",
   "%namespace%:shareStatus": ""

@@ -43,7 +43,10 @@ export default function SharePage() {
     formValue: {
       tokenId: -1,
       account: '',
-      password: ''
+      password: '',
+      gpt35Limit: -1,
+      gpt4Limit: -1,
+      showConversations: false
     },
     title: t('token.edit'),
     show: false,
@@ -78,6 +81,13 @@ export default function SharePage() {
     { title: 'ShareToken', dataIndex: 'shareToken', align: 'center',
       render: (text) => (
         <Input value={text} readOnly/>
+      ),
+    },
+    { title: t('token.gpt35Limit'), dataIndex: 'gpt35Limit', align: 'center', width: 120 },
+    { title: t('token.gpt4Limit'), dataIndex: 'gpt4Limit', align: 'center', width: 120 },
+    { title: t('token.showConversations'), dataIndex: 'showConversations', align: 'center', width: 120,
+      render: (text) => (
+        text === 'True' ? t('common.yes') : t('common.no')
       ),
     },
     { title: t('token.expireAt'), dataIndex: 'expireAt', align: 'center', width: 200 },

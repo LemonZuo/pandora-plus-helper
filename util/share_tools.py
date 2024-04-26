@@ -15,15 +15,14 @@ def set_share_token_auth(share_token_auth):
 
 
 # 获取share_token
-def gen_share_token(access_token, unique_name, expires_in=0, show_conversations=False, show_userinfo=True,
-                    reset_limit=True):
+def gen_share_token(access_token, unique_name, expires_in=0, gpt35_limit=-1, gpt4_limit=-1, show_conversations=False, show_userinfo=True, reset_limit=True):
     req_data = {
         "unique_name": unique_name,
         "access_token": access_token,
         "expires_in": expires_in,
         "site_limit": "",
-        "gpt35_limit": "-1",
-        "gpt4_limit": "-1",
+        "gpt35_limit": gpt35_limit,
+        "gpt4_limit": gpt4_limit,
         "show_conversations": show_conversations,
         "show_userinfo": show_userinfo,
         "reset_limit": reset_limit,

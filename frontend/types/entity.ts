@@ -66,6 +66,9 @@ export interface Account {
   account: string;
   password: string;
   tokenId: number;
+  gpt35Limit: number;
+  gpt4Limit: number;
+  showConversations: boolean;
   status?: string;
   shareToken?: string;
   expireAt?: string;

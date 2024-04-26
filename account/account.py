@@ -50,6 +50,9 @@ def share_add():
     token_id = request.json.get('token_id')
     account = request.json.get('account')
     password = request.json.get('password')
+    gpt35_limit = request.json.get('gpt35_limit')
+    gpt4_limit = request.json.get('gpt4_limit')
+    show_conversations = request.json.get('show_conversations')
 
     token = db.session.query(Token).filter_by(id=token_id).first()
 
@@ -58,7 +61,7 @@ def share_add():
             return ApiResponse.error('请先登录账号')
         else:
             try:
-                res = gen_share_token(token.access_token, account)
+                res = gen_share_token(access_token=token.access_token, unique_name=account,gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations)
                 logger.info(res)
             except Exception as e:
                 logger.error(e)
@@ -77,7 +80,10 @@ def share_add():
                 expire_at=expire_at,
                 create_time=now,
                 update_time=now,
-                status=1
+                status=1,
+                gpt35_limit=gpt35_limit,
+                gpt4_limit=gpt4_limit,
+                show_conversations=show_conversations
             )
             logger.info(account_entity)
             db.session.add(account_entity)
@@ -118,6 +124,9 @@ def share_update():
     token_id = request.json.get('token_id')
     account = request.json.get('account')
     password = request.json.get('password')
+    gpt35_limit = request.json.get('gpt35_limit')
+    gpt4_limit = request.json.get('gpt4_limit')
+    show_conversations = request.json.get('show_conversations')
 
     account_entity = db.session.query(Account).filter_by(id=id).first()
     if not account_entity:
@@ -131,7 +140,7 @@ def share_update():
         return ApiResponse.error('请先登录账号')
     else:
         try:
-            res = gen_share_token(token.access_token, account)
+            res = gen_share_token(access_token=token.access_token, unique_name=account, gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations)
             logger.info(res)
         except Exception as e:
             logger.error(e)
@@ -145,6 +154,9 @@ def share_update():
         account_entity.account = account
         account_entity.password = password
         account_entity.share_token = res.get('token_key')
+        account_entity.gpt35_limit = gpt35_limit
+        account_entity.gpt4_limit = gpt4_limit
+        account_entity.show_conversations = show_conversations
         account_entity.expire_at = expire_at
         account_entity.update_time = datetime.now()
         logger.info(account_entity)

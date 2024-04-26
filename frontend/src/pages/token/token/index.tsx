@@ -8,6 +8,7 @@ import {
   Modal,
   Popconfirm,
   Row,
+  Select,
   Space,
   Spin,
   Typography,
@@ -44,6 +45,8 @@ import {useTranslation} from "react-i18next";
 
 type SearchFormFieldType = Pick<Token, 'tokenName'>;
 
+
+const { Option } = Select;
 export default function TokenPage() {
   const [searchForm] = Form.useForm();
   const {t} = useTranslation()
@@ -97,6 +100,9 @@ export default function TokenPage() {
       tokenId: -1,
       account: '',
       password: '',
+      gpt35Limit: -1,
+      gpt4Limit: -1,
+      showConversations: false
     },
     title: 'New',
     show: false,
@@ -288,6 +294,9 @@ export default function TokenPage() {
         tokenId: record.id,
         account: '',
         password: '',
+        gpt35Limit: -1,
+        gpt4Limit: -1,
+        showConversations: false,
       },
     }));
   }
@@ -415,6 +424,21 @@ export const AccountModal = ({title, show, isEdit, formValue, onOk, onCancel}: A
         </Form.Item>
         <Form.Item<Account> label={t('token.password')} name="password" required>
           <Input.Password/>
+        </Form.Item>
+        <Form.Item<Account> label={t('token.gpt35Limit')} name="gpt35Limit" required>
+          <Input/>
+        </Form.Item>
+        <Form.Item<Account> label={t('token.gpt4Limit')} name="gpt4Limit" required>
+          <Input/>
+        </Form.Item>
+        <Form.Item<Account> label={t('token.showConversations')} name="showConversations" required>
+          <Select
+            placeholder="请选择"
+            allowClear
+          >
+            <Option value="True">是</Option>
+            <Option value="False">否</Option>
+          </Select>
         </Form.Item>
       </Form>
     </Modal>
