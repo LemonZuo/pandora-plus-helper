@@ -38,7 +38,6 @@ export default function SharePage() {
   const params = useSearchParams();
   const [searchForm] = Form.useForm();
   const tokenId = Form.useWatch('tokenId', searchForm);
-  // const uniqueName = Form.useWatch('uniqueName', searchForm);
   const [deleteRowKey, setDeleteRowKey] = useState<string | undefined>(undefined);
   const [shareModalProps, setShareModalProps] = useState<AccountModalProps>({
     formValue: {
@@ -70,15 +69,6 @@ export default function SharePage() {
     { title: t('token.tokenId'), dataIndex: 'tokenId', align: 'center', width: 80 },
     { title: 'Account', dataIndex: 'account', align: 'center', width: 120 },
     { title: t('token.password'), dataIndex: 'password', align: 'center', width: 120 },
-    // { title: t('token.status'), dataIndex: 'status', align: 'center', width: 120 },
-    // {
-    //   title: t('token.shareToken'), dataIndex: 'shareToken', align: 'center', ellipsis: true,
-    //   render: (text) => (
-    //     <Typography.Text style={{maxWidth: 200}} ellipsis={true}>
-    //       {text}
-    //     </Typography.Text>
-    //   )
-    // },
     { title: 'ShareToken', dataIndex: 'shareToken', align: 'center',
       render: (text) => (
         <Input value={text} readOnly/>
@@ -91,16 +81,15 @@ export default function SharePage() {
       render: (count) => {
         if (count === 0) {
           // 为0无法使用
-          return <Tooltip title="无法使用"><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
+          return <Tooltip title={t('token.notAvailable')}><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
         } else if (count < 0) {
           // 负数不限制
-          return <Tooltip title="不限制次数"><MinusCircleOutlined style={{ color: 'green' }} /></Tooltip>;
+          return <Tooltip title={t('token.unlimitedTimes')}><MinusCircleOutlined style={{ color: 'green' }} /></Tooltip>;
         } else {
           // 大于零为限制的具体次数
           return (
-            <Tooltip title={`限制次数: ${count}`}>
+            <Tooltip title={`${t('token.limitedTimes')}:${count}`}>
               <ExclamationCircleOutlined style={{ color: 'orange' }} />
-              <span>{` ${count}`}</span>
             </Tooltip>
           );
         }
@@ -114,16 +103,15 @@ export default function SharePage() {
       render: (count) => {
         if (count === 0) {
           // 为0无法使用
-          return <Tooltip title="无法使用"><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
+          return <Tooltip title={t('token.notAvailable')}><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
         } else if (count < 0) {
           // 负数不限制
-          return <Tooltip title="不限制次数"><MinusCircleOutlined style={{ color: 'green' }} /></Tooltip>;
+          return <Tooltip title={t('token.unlimitedTimes')}><MinusCircleOutlined style={{ color: 'green' }} /></Tooltip>;
         } else {
           // 大于零为限制的具体次数
           return (
-            <Tooltip title={`限制次数: ${count}`}>
+            <Tooltip title={`${t('token.limitedTimes')}:${count}`}>
               <ExclamationCircleOutlined style={{ color: 'orange' }} />
-              <span>{` ${count}`}</span>
             </Tooltip>
           );
         }
@@ -145,13 +133,6 @@ export default function SharePage() {
     { title: t('token.expireAt'), dataIndex: 'expireAt', align: 'center', width: 200 },
     { title: t('token.createTime'), dataIndex: 'createTime', align: 'center', width: 200 },
     { title: t('token.updateTime'), dataIndex: 'updateTime', align: 'center', width: 200 },
-    // { title: t('token.comment'), dataIndex: 'comment', align: 'center',
-    //   render: (text) => (
-    //     <Typography.Text style={{maxWidth: 500}} ellipsis={true}>
-    //       {text}
-    //     </Typography.Text>
-    //   )
-    // },
     {
       title: t('token.action'),
       key: 'operation',
