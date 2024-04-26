@@ -7,7 +7,7 @@ import {
   Input,
   Popconfirm,
   Row,
-  Space,
+  Space, Tooltip,
   // Typography,
 } from 'antd';
 import Table, { ColumnsType } from 'antd/es/table';
@@ -15,7 +15,8 @@ import {useEffect, useState} from 'react';
 
 import {Account} from '#/entity';
 import {
-  DeleteOutlined, EditOutlined,
+  CheckCircleOutlined, CloseCircleOutlined,
+  DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MinusCircleOutlined,
 } from "@ant-design/icons";
 import {useQuery} from "@tanstack/react-query";
 import {useSearchParams} from "@/router/hooks";
@@ -83,12 +84,63 @@ export default function SharePage() {
         <Input value={text} readOnly/>
       ),
     },
-    { title: t('token.gpt35Limit'), dataIndex: 'gpt35Limit', align: 'center', width: 120 },
-    { title: t('token.gpt4Limit'), dataIndex: 'gpt4Limit', align: 'center', width: 120 },
-    { title: t('token.showConversations'), dataIndex: 'showConversations', align: 'center', width: 120,
-      render: (text) => (
-        text === 'True' ? t('common.yes') : t('common.no')
-      ),
+    { title: t('token.gpt35Limit'),
+      dataIndex: 'gpt35Limit',
+      align: 'center',
+      width: 120,
+      render: (count) => {
+        if (count === 0) {
+          // 为0无法使用
+          return <Tooltip title="无法使用"><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
+        } else if (count < 0) {
+          // 负数不限制
+          return <Tooltip title="不限制次数"><MinusCircleOutlined style={{ color: 'green' }} /></Tooltip>;
+        } else {
+          // 大于零为限制的具体次数
+          return (
+            <Tooltip title={`限制次数: ${count}`}>
+              <ExclamationCircleOutlined style={{ color: 'orange' }} />
+              <span>{` ${count}`}</span>
+            </Tooltip>
+          );
+        }
+      },
+    },
+    {
+      title: t('token.gpt4Limit'),
+      dataIndex: 'gpt4Limit',
+      align: 'center',
+      width: 120,
+      render: (count) => {
+        if (count === 0) {
+          // 为0无法使用
+          return <Tooltip title="无法使用"><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
+        } else if (count < 0) {
+          // 负数不限制
+          return <Tooltip title="不限制次数"><MinusCircleOutlined style={{ color: 'green' }} /></Tooltip>;
+        } else {
+          // 大于零为限制的具体次数
+          return (
+            <Tooltip title={`限制次数: ${count}`}>
+              <ExclamationCircleOutlined style={{ color: 'orange' }} />
+              <span>{` ${count}`}</span>
+            </Tooltip>
+          );
+        }
+      },
+    },
+    {
+      title: t('token.showConversations'),
+      dataIndex: 'showConversations',
+      align: 'center',
+      width: 120,
+      render: (text) => {
+        if (text === 'True') {
+          return <CheckCircleOutlined style={{ color: 'orange' }} />;
+        } else {
+          return <CloseCircleOutlined style={{ color: 'green' }} />;
+        }
+      },
     },
     { title: t('token.expireAt'), dataIndex: 'expireAt', align: 'center', width: 200 },
     { title: t('token.createTime'), dataIndex: 'createTime', align: 'center', width: 200 },
