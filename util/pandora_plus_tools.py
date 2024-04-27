@@ -7,8 +7,8 @@ from util.request_tools import send_request, send_request_status
 
 # oaifree 获取Access Token
 TOKEN_URL = "https://token.oaifree.com/api/auth/refresh"
-# 对话URL
-CONVERSATION_URL = "https://api.oaifree.com/v1/chat/completions"
+# 订阅检查
+SUBSCRIPTION_CHECK_URL = "https://chat.oaifree.com/dad04481-fa3f-494e-b90c-b822128073e5/backend-api/me"
 
 
 # 发送请求并解析响应以刷新Access Token
@@ -32,22 +32,11 @@ def gen_access_token(refresh_token):
 def check_subscription_status(access_token):
     if not access_token:
         raise ValueError("Access token is empty")
-    req_data = {
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {
-                "role": "user",
-                "content": "重复我说的话：我，V，谨庄严宣誓。"
-            }
-        ],
-        "temperature": 0.7
-    }
-
     headers = {
         "Content-Type": "application/json",
         "Authorization": f'Bearer {access_token}'
     }
-    subscription_status = send_request_status(CONVERSATION_URL, json.dumps(req_data), headers)
+    subscription_status = send_request_status(SUBSCRIPTION_CHECK_URL, None, headers, 'GET')
     if not subscription_status:
         raise Exception("Check subscription status failed, the response is empty")
 
