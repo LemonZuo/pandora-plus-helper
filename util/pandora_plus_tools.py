@@ -64,12 +64,16 @@ def refresh_by_token_id(token_id):
     if not token:
         raise Exception('Token不存在')
 
-    res = gen_access_token(token.refresh_token)
-    if not res:
-        raise Exception('刷新失败')
+    try:
+        res = gen_access_token(token.refresh_token)
+    except Exception as e:
+        logger.error(e)
+        raise Exception("获取Access Token失败")
 
-    plus_subscription = check_subscription_status(res.get('access_token'))
-    if not plus_subscription:
+    try:
+        plus_subscription = check_subscription_status(res.get('access_token'))
+    except Exception as e:
+        logger.error(e)
         raise Exception('检查订阅状态失败')
 
     token.plus_subscription = plus_subscription
