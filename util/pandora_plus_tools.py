@@ -70,13 +70,6 @@ def refresh_by_token_id(token_id):
         logger.error(e)
         raise Exception("获取Access Token失败")
 
-    try:
-        plus_subscription = check_subscription_status(res.get('access_token'))
-    except Exception as e:
-        logger.error(e)
-        raise Exception('检查订阅状态失败')
-
-    token.plus_subscription = plus_subscription
     token.access_token = res.get('access_token')
     token.expire_at = datetime.now() + timedelta(seconds=res.get('expires_in'))
     token.update_time = datetime.now()
@@ -101,5 +94,22 @@ def refresh_by_token_id(token_id):
             account.update_time = datetime.now()
         except Exception as e:
             logger.error(e)
+
+    db.session.commit()
+
+
+# 刷新订阅状态
+def refresh_subscription_status(token_id):
+    token = db.session.query(Token).filter_by(id=token_id).first()
+    if not token:
+        raise Exception('Token不存在')
+
+    try:
+        plus_subscription = check_subscription_status(token.access_token)
+    except Exception as e:
+        logger.error(e)
+        raise Exception('检查订阅状态失败')
+
+    token.plus_subscription = plus_subscription
 
     db.session.commit()

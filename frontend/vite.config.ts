@@ -5,7 +5,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { inspectorServer } from '@react-dev-inspector/vite-plugin'
+import { inspectorServer } from '@react-dev-inspector/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -34,7 +34,7 @@ export default defineConfig({
   ],
   server: {
     // 自动打开浏览器
-    open: true,
+    open: false,
     host: true,
     port: 3001,
     proxy: {

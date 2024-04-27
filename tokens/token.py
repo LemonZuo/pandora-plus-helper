@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required
 from loguru import logger
 from model import db, Token
 from util.api_response import ApiResponse
-from util.pandora_plus_tools import gen_access_token, refresh_by_token_id, check_subscription_status
+from util.pandora_plus_tools import gen_access_token, refresh_by_token_id, check_subscription_status, refresh_subscription_status
 
 token_bp = Blueprint('token_bp', __name__)
 
@@ -112,6 +112,13 @@ def account_refresh():
     try:
         refresh_by_token_id(token_id)
     except Exception as e:
+        logger.error("刷新失败")
+        return ApiResponse.error(str(e))
+
+    try:
+        refresh_subscription_status(token_id)
+    except Exception as e:
+        logger.error("刷新订阅状态失败")
         return ApiResponse.error(str(e))
 
     return ApiResponse.success('刷新成功')
@@ -127,6 +134,7 @@ def refresh_all_user():
         logger.info(f'共有{len(tokens)}个token')
 
         for token in tokens:
+            # 刷新token
             try:
                 # 检查 rt 是否存在
                 if not token.refresh_token:
@@ -135,11 +143,21 @@ def refresh_all_user():
                 # 判断at是否过期
                 if token.expire_at > datetime.now():
                     logger.info(f'{token.token_name} 未过期')
+                    # 刷新订阅状态
+                    try:
+                        refresh_subscription_status(token.id)
+                    except Exception as e:
+                        logger.error("刷新订阅状态失败", e)
                     continue
-                flag = True
-                refresh_by_token_id(token.id)
+                else:
+                    flag = True
+                    # 刷新订阅状态
+                    try:
+                        refresh_subscription_status(token.id)
+                    except Exception as e:
+                        logger.error("刷新订阅状态失败", e)
             except Exception as e:
-                logger.error(e)
+                logger.error("刷新token失败", e)
         if flag:
             logger.info('刷新成功')
 
@@ -150,7 +168,7 @@ def refresh_all_user():
 @jwt_required()
 def refresh_task():
     from app import scheduler
-    scheduler.add_job(func=refresh_all_user, trigger='interval', minutes=1, id='token_job')
+    scheduler.add_job(func=refresh_all_user, trigger='cron', minute='0', id='token_job', replace_existing=True)
     if not scheduler.running:
         scheduler.start()
     return ApiResponse.success('定时刷新已开启')
