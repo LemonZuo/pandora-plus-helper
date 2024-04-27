@@ -54,6 +54,7 @@ export interface Role {
 export interface Token {
   id: number;
   tokenName: string;
+  plusSubscription?: number;
   refreshToken: string;
   accessToken?: string;
   expireAt?: string;
@@ -68,7 +69,7 @@ export interface Account {
   tokenId: number;
   gpt35Limit: number;
   gpt4Limit: number;
-  showConversations: boolean;
+  showConversations: 'True' | 'False';
   status?: string;
   shareToken?: string;
   expireAt?: string;

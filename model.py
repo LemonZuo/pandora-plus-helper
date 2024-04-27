@@ -7,6 +7,7 @@ class Token(db.Model):
     __tablename__ = 'tb_token'
     id = db.Column(db.Integer, primary_key=True, comment='主键')
     token_name = db.Column(db.Text, nullable=False, comment='token名称')
+    plus_subscription = db.Column(db.Integer, nullable=True, default=-1, comment='订阅状态, -1:未知, 0:未订阅, 1:已订阅')
     refresh_token = db.Column(db.Text, nullable=False, unique=True, comment='刷新token')
     access_token = db.Column(db.Text, nullable=False, comment='访问token')
     expire_at = db.Column(db.DateTime, nullable=False, comment='过期时间')
@@ -14,7 +15,7 @@ class Token(db.Model):
     update_time = db.Column(db.DateTime, nullable=False, comment='更新时间')
 
     def keys(self):
-        return ['id', 'token_name', 'refresh_token', 'access_token', 'expire_at', 'create_time', 'update_time']
+        return ['id', 'token_name', 'plus_subscription', 'refresh_token', 'access_token', 'expire_at', 'create_time', 'update_time']
 
     def __getitem__(self, item):
         return getattr(self, item)

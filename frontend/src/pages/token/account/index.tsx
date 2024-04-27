@@ -46,7 +46,7 @@ export default function SharePage() {
       password: '',
       gpt35Limit: -1,
       gpt4Limit: -1,
-      showConversations: false
+      showConversations: 'False',
     },
     title: t('token.edit'),
     show: false,
@@ -124,9 +124,17 @@ export default function SharePage() {
       width: 120,
       render: (text) => {
         if (text === 'True') {
-          return <CheckCircleOutlined style={{ color: 'orange' }} />;
+          return (
+            <Tooltip title={t('common.yes')}>
+              <CheckCircleOutlined style={{ color: 'orange' }} />
+            </Tooltip>
+          );
         } else {
-          return <CloseCircleOutlined style={{ color: 'green' }} />;
+          return (
+            <Tooltip title={t('common.no')}>
+              <CloseCircleOutlined style={{ color: 'green' }} />
+            </Tooltip>
+          );
         }
       },
     },
@@ -198,11 +206,6 @@ export default function SharePage() {
                 <Input />
               </Form.Item>
             </Col>
-            {/*<Col span={6} lg={6}>*/}
-            {/*  <Form.Item<SearchFormFieldType> label="Unique Name" name="uniqueName" className="!mb-0">*/}
-            {/*    <Input />*/}
-            {/*  </Form.Item>*/}
-            {/*</Col>*/}
             <Col span={21} lg={21}>
               <div className="flex justify-end">
                 <Button onClick={onSearchFormReset}>{t('token.reset')}</Button>

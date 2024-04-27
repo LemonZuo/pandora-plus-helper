@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required
 from loguru import logger
 from model import db, Token
 from util.api_response import ApiResponse
-from util.pandora_plus_tools import gen_access_token, refresh_by_token_id
+from util.pandora_plus_tools import gen_access_token, refresh_by_token_id, check_subscription_status
 
 token_bp = Blueprint('token_bp', __name__)
 
@@ -35,11 +35,18 @@ def account_add():
         logger.error(e)
         return ApiResponse.error("获取Access Token失败")
 
+    try:
+        plus_subscription = check_subscription_status(res.get('access_token'))
+    except Exception as e:
+        logger.error(e)
+        return ApiResponse.error("检查订阅状态失败")
+
     now = datetime.now()
     expire_at = now + timedelta(seconds=res.get('expires_in'))
 
     token = Token(
         token_name=token_name,
+        plus_subscription=plus_subscription,
         refresh_token=refresh_token,
         access_token=res.get('access_token'),
         expire_at=expire_at,
@@ -70,7 +77,14 @@ def account_update():
         logger.error(e)
         return ApiResponse.error("获取Access Token失败")
 
+    try:
+        plus_subscription = check_subscription_status(res.get('access_token'))
+    except Exception as e:
+        logger.error(e)
+        return ApiResponse.error("检查订阅状态失败")
+
     token.token_name = token_name
+    token.plus_subscription = plus_subscription
     token.refresh_token = refresh_token
     token.access_token = res.get('access_token')
     token.expire_at = datetime.now() + timedelta(seconds=res.get('expires_in'))

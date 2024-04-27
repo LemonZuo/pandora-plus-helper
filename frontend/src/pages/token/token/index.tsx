@@ -10,7 +10,7 @@ import {
   Row,
   Select,
   Space,
-  Spin,
+  Spin, Tooltip,
   Typography,
 } from 'antd';
 import Table, {ColumnsType} from 'antd/es/table';
@@ -19,12 +19,10 @@ import {useEffect, useState} from 'react';
 // import ProTag from '@/theme/antd/components/tag';
 import {Account, Token} from '#/entity';
 import {
-  CaretRightFilled,
-  DeleteOutlined,
-  EditOutlined,
-  FundOutlined,
+  CaretRightFilled, CheckCircleOutlined, DeleteOutlined,
+  EditOutlined, FundOutlined, MinusCircleOutlined,
   PauseCircleFilled,
-  PlusOutlined,
+  PlusOutlined, QuestionCircleOutlined,
   ReloadOutlined,
   ShareAltOutlined
 } from "@ant-design/icons";
@@ -102,7 +100,7 @@ export default function TokenPage() {
       password: '',
       gpt35Limit: -1,
       gpt4Limit: -1,
-      showConversations: false
+      showConversations: 'False',
     },
     title: 'New',
     show: false,
@@ -146,28 +144,28 @@ export default function TokenPage() {
         </Typography.Text>
       )
     },
-    // {
-    //   title: t('token.refreshToken'), dataIndex: 'refreshToken', align: 'center', ellipsis: true,
-    //   render: (text) => (
-    //     <Typography.Text style={{maxWidth: 200}} ellipsis={true}>
-    //       {text}
-    //     </Typography.Text>
-    //   )
-    // },
+    {
+      title: t('token.plusSubscription'),
+      dataIndex: 'plusSubscription',
+      align: 'center',
+      render: (subscription) => {
+        if (subscription === -1) {
+          return <Tooltip title={t('token.subscriptionUnknown')}><QuestionCircleOutlined style={{ color: 'gray' }} /></Tooltip>;
+        } else if (subscription === 0) {
+          return <Tooltip title={t('token.unsubscribed')}><MinusCircleOutlined style={{ color: 'red' }} /></Tooltip>;
+        } else if (subscription === 1) {
+          return <Tooltip title={t('token.subscribed')}><CheckCircleOutlined style={{ color: 'green' }} /></Tooltip>;
+        }
+      },
+    },
     { title: t('token.refreshToken'), dataIndex: 'refreshToken', align: 'center',
       render: (text) => (
         <Input value={text} readOnly/>
       ),
     },
-    // {
-    //   title: t('token.accessToken'), dataIndex: 'accessToken', align: 'center', ellipsis: true,
-    //   render: (text) => (
-    //     <Typography.Text style={{maxWidth: 200}} ellipsis={true}>
-    //       {text}
-    //     </Typography.Text>
-    //   )
-    // },
-    { title: t('token.accessToken'), dataIndex: 'accessToken', align: 'center',
+    { title: t('token.accessToken'),
+      dataIndex: 'accessToken',
+      align: 'center',
       render: (text) => (
         <Input value={text} readOnly/>
       ),
@@ -215,15 +213,13 @@ export default function TokenPage() {
       align: 'center',
       render: (_, record) => (
         <Button.Group>
-          <Popconfirm title={t('common.refreshConfirm')} okText="Yes" cancelText="No"
-                      placement="left" onConfirm={() => {
+          <Popconfirm title={t('common.refreshConfirm')} okText="Yes" cancelText="No" placement="left" onConfirm={() => {
             setRefreshTokenId(record.id);
             refreshTokenMutation.mutate(record.id, {
               onSettled: () => setRefreshTokenId(undefined),
             })
           }}>
-            <Button key={record.id} icon={<ReloadOutlined/>} type={"primary"}
-                    loading={refreshTokenId === record.id}>
+            <Button key={record.id} icon={<ReloadOutlined/>} type={"primary"} loading={refreshTokenId === record.id}>
               {t('common.refresh')}
             </Button>
           </Popconfirm>
@@ -234,8 +230,7 @@ export default function TokenPage() {
               onSuccess: () => setDeleteTokenId(undefined)
             })
           }}>
-            <Button icon={<DeleteOutlined/>} type={"primary"}
-                    loading={deleteTokenId === record.id} danger/>
+            <Button icon={<DeleteOutlined/>} type={"primary"} loading={deleteTokenId === record.id} danger/>
           </Popconfirm>
         </Button.Group>
       ),
@@ -296,7 +291,7 @@ export default function TokenPage() {
         password: '',
         gpt35Limit: -1,
         gpt4Limit: -1,
-        showConversations: false,
+        showConversations: 'False',
       },
     }));
   }
@@ -431,13 +426,10 @@ export const AccountModal = ({title, show, isEdit, formValue, onOk, onCancel}: A
         <Form.Item<Account> label={t('token.gpt4Limit')} name="gpt4Limit" required>
           <Input/>
         </Form.Item>
-        <Form.Item<Account> label={t('token.showConversations')} name="showConversations" required>
-          <Select
-            placeholder="请选择"
-            allowClear
-          >
-            <Option value="True">是</Option>
-            <Option value="False">否</Option>
+        <Form.Item<Account> label={t('token.showConversations')} name="showConversations" initialValue="False" required>
+          <Select allowClear>
+            <Option value="True">{t('common.yes')}</Option>
+            <Option value="False">{t('common.no')}</Option>
           </Select>
         </Form.Item>
       </Form>
@@ -457,10 +449,6 @@ function TokenModal({title, show, formValue, onOk, onCancel}: TokenModalProps) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const {t} = useTranslation()
-
-  // useEffect(() => {
-  //   form.setFieldsValue({...formValue});
-  // }, [formValue, form]);
 
   const onModalOk = () => {
     form.validateFields().then((values) => {
