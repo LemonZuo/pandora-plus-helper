@@ -1,14 +1,16 @@
-import json
 from datetime import datetime, timedelta
-from model import db, Token, Account
-from util.share_tools import gen_share_token
+
+import requests
 from loguru import logger
-from util.request_tools import send_request, send_request_status
+
+from model import db, Token, Account
+from util.request_tools import send_request
+from util.share_tools import gen_share_token
 
 # oaifree 获取Access Token
 TOKEN_URL = "https://token.oaifree.com/api/auth/refresh"
 # 订阅检查
-SUBSCRIPTION_CHECK_URL = "https://chat.oaifree.com/dad04481-fa3f-494e-b90c-b822128073e5/backend-api/me"
+SUBSCRIPTION_CHECK_URL = "https://chat.oaifree.com/dad04481-fa3f-494e-b90c-b822128073e5/backend-api/models?history_and_training_disabled=false"
 
 
 # 发送请求并解析响应以刷新Access Token
@@ -36,13 +38,25 @@ def check_subscription_status(access_token):
         "Content-Type": "application/json",
         "Authorization": f'Bearer {access_token}'
     }
-    subscription_status = send_request_status(SUBSCRIPTION_CHECK_URL, None, headers, 'GET')
-    if not subscription_status:
-        raise Exception("Check subscription status failed, the response is empty")
 
-    if subscription_status == 200:
+    response = requests.get(SUBSCRIPTION_CHECK_URL, None, headers=headers)
+    if response.status_code != 200:
+        logger.info(f"check_subscription_status: 0, because of status code {response.status_code}")
+        return 0
+
+    # 检查返回的json数据
+    res = response.json()
+    if not res:
+        logger.info(f"check_subscription_status: -1, because of empty response body")
+        return -1
+
+    # 判断是否存在slug为"gpt-4"的项
+    subscribe_plus = any(model['slug'] == 'gpt-4' for model in res['models'])
+    if subscribe_plus:
+        logger.info(f"check_subscription_status: 1, because of gpt-4 model found in response body")
         return 1
     else:
+        logger.info(f"check_subscription_status: 0, because of no gpt-4 model found in response body")
         return 0
 
 
