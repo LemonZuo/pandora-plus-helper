@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from loguru import logger
-from model import db, Token
+from model import db, Token, Account
 from util.api_response import ApiResponse
 from util.pandora_plus_tools import gen_access_token, refresh_by_token_id, check_subscription_status, refresh_subscription_status
 
@@ -98,8 +98,11 @@ def account_update():
 @token_bp.route('/delete', methods=['POST'])
 @jwt_required()
 def account_delete():
-    token_id = request.json.get('id')
-    token = db.session.query(Token).filter_by(id=token_id).first()
+    id = request.json.get('id')
+    token = db.session.query(Token).filter_by(id=id).first()
+    accounts = db.session.query(Account).filter_by(token_id=id).all()
+    if len(accounts) > 0:
+        return ApiResponse.error('存在关联账号，请先删除关联账号')
     db.session.delete(token)
     db.session.commit()
     return ApiResponse.success({})

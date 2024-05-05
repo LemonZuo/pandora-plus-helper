@@ -100,7 +100,7 @@ export default function TokenPage() {
       password: '',
       gpt35Limit: -1,
       gpt4Limit: -1,
-      showConversations: 'False',
+      showConversations: 0,
     },
     title: 'New',
     show: false,
@@ -149,11 +149,11 @@ export default function TokenPage() {
       dataIndex: 'plusSubscription',
       align: 'center',
       render: (subscription) => {
-        if (subscription === -1) {
+        if (subscription === 1) {
           return <Tooltip title={t('token.subscriptionUnknown')}><QuestionCircleOutlined style={{ color: 'gray' }} /></Tooltip>;
-        } else if (subscription === 0) {
+        } else if (subscription === 2) {
           return <Tooltip title={t('token.unsubscribed')}><MinusCircleOutlined style={{ color: 'red' }} /></Tooltip>;
-        } else if (subscription === 1) {
+        } else if (subscription === 3) {
           return <Tooltip title={t('token.subscribed')}><CheckCircleOutlined style={{ color: 'green' }} /></Tooltip>;
         }
       },
@@ -291,7 +291,7 @@ export default function TokenPage() {
         password: '',
         gpt35Limit: -1,
         gpt4Limit: -1,
-        showConversations: 'False',
+        showConversations: 0,
       },
     }));
   }
@@ -426,10 +426,10 @@ export const AccountModal = ({title, show, isEdit, formValue, onOk, onCancel}: A
         <Form.Item<Account> label={t('token.gpt4Limit')} name="gpt4Limit" required>
           <Input/>
         </Form.Item>
-        <Form.Item<Account> label={t('token.showConversations')} name="showConversations" initialValue="False" required>
+        <Form.Item<Account> label={t('token.showConversations')} name="showConversations" initialValue={0} required>
           <Select allowClear>
-            <Option value="True">{t('common.yes')}</Option>
-            <Option value="False">{t('common.no')}</Option>
+            <Option value={1}>{t('common.yes')}</Option>
+            <Option value={0}>{t('common.no')}</Option>
           </Select>
         </Form.Item>
       </Form>

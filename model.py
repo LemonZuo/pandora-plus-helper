@@ -7,7 +7,7 @@ class Token(db.Model):
     __tablename__ = 'tb_token'
     id = db.Column(db.Integer, primary_key=True, comment='主键')
     token_name = db.Column(db.Text, nullable=False, comment='token名称')
-    plus_subscription = db.Column(db.Integer, nullable=True, default=-1, comment='订阅状态, -1:未知, 0:未订阅, 1:已订阅')
+    plus_subscription = db.Column(db.Integer, nullable=True, default=0, comment='订阅状态, 1:未知, 2:未订阅, 3:已订阅')
     refresh_token = db.Column(db.Text, nullable=False, unique=True, comment='刷新token')
     access_token = db.Column(db.Text, nullable=False, comment='访问token')
     expire_at = db.Column(db.DateTime, nullable=False, comment='过期时间')
@@ -31,7 +31,7 @@ class Account(db.Model):
     password = db.Column(db.Text, nullable=False, unique=True, comment='密码')
     gpt35_limit = db.Column(db.Integer, nullable=True, default=-1, comment='GPT-3.5次数(为0无法使用，负数不限制)')
     gpt4_limit = db.Column(db.Integer, nullable=True, default=-1, comment='GPT-4.0次数(为0无法使用，负数不限制)')
-    show_conversations = db.Column(db.Text, nullable=True, default='False', comment='会话无需隔离，true:不隔离,false:隔离')
+    show_conversations = db.Column(db.Integer, nullable=True, default=0, comment='会话无需隔离，1:不隔离,0:隔离')
     status = db.Column(db.Integer, nullable=False, default=1, comment='状态, 1:正常, 0:禁用')
     token_id = db.Column(db.Integer, nullable=False, comment='token_id')
     share_token = db.Column(db.Text, nullable=False, comment='共享token')

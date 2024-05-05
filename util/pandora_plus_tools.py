@@ -41,23 +41,23 @@ def check_subscription_status(access_token):
 
     response = requests.get(SUBSCRIPTION_CHECK_URL, None, headers=headers)
     if response.status_code != 200:
-        logger.info(f"check_subscription_status: 0, because of status code {response.status_code}")
-        return 0
+        logger.info(f"check_subscription_status: 2, because of status code {response.status_code}")
+        return 2
 
     # 检查返回的json数据
     res = response.json()
     if not res:
-        logger.info(f"check_subscription_status: -1, because of empty response body")
-        return -1
+        logger.info(f"check_subscription_status: 1, because of empty response body")
+        return 1
 
     # 判断是否存在slug为"gpt-4"的项
     subscribe_plus = any(model['slug'] == 'gpt-4' for model in res['models'])
     if subscribe_plus:
-        logger.info(f"check_subscription_status: 1, because of gpt-4 model found in response body")
-        return 1
+        logger.info(f"check_subscription_status: 3, because of gpt-4 model found in response body")
+        return 3
     else:
-        logger.info(f"check_subscription_status: 0, because of no gpt-4 model found in response body")
-        return 0
+        logger.info(f"check_subscription_status: 2, because of no gpt-4 model found in response body")
+        return 2
 
 
 # 刷新Access Token
@@ -86,7 +86,7 @@ def refresh_by_token_id(token_id):
         try:
             res = gen_share_token(access_token=token.access_token, unique_name=account.account,
                                   gpt35_limit=account.gpt35_limit, gpt4_limit=account.gpt4_limit,
-                                  show_conversations=account.show_conversations)
+                                  show_conversations=account.show_conversations == 1)
             expire_at = datetime.fromtimestamp(res.get('expire_at'))
             # 检查expire_at的类型是否正确
             if not isinstance(expire_at, datetime):

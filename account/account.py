@@ -61,7 +61,7 @@ def share_add():
             return ApiResponse.error('请先登录账号')
         else:
             try:
-                res = gen_share_token(access_token=token.access_token, unique_name=account,gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations)
+                res = gen_share_token(access_token=token.access_token, unique_name=account,gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations == 1)
                 logger.info(res)
             except Exception as e:
                 logger.error(e)
@@ -140,7 +140,7 @@ def share_update():
         return ApiResponse.error('请先登录账号')
     else:
         try:
-            res = gen_share_token(access_token=token.access_token, unique_name=account, gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations)
+            res = gen_share_token(access_token=token.access_token, unique_name=account, gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations == 1)
             logger.info(res)
         except Exception as e:
             logger.error(e)

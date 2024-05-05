@@ -46,7 +46,7 @@ export default function SharePage() {
       password: '',
       gpt35Limit: -1,
       gpt4Limit: -1,
-      showConversations: 'False',
+      showConversations: 0,
     },
     title: t('token.edit'),
     show: false,
