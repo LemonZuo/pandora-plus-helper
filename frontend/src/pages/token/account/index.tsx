@@ -60,6 +60,7 @@ export default function SharePage() {
       setShareModalProps((prev) => ({...prev, show: false}));
     },
   });
+  const [chatAccountId, setChatAccountId] = useState<number | undefined>(-1);
 
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function SharePage() {
   }, [params]);
 
   function handleQuickLogin(record: Account) {
+    setChatAccountId(record.id)
     accountService.chatAuthAccount(record)
       .then((res) => {
         const {loginUrl} = res;
@@ -75,10 +77,14 @@ export default function SharePage() {
         } else {
           message.error('Failed to get login url').then(r => console.log(r))
         }
-      }).catch((err) => {
-      console.log(err)
-      message.error('Failed to get login url').then(r => console.log(r))
-    })
+      })
+      .catch((err) => {
+        console.log(err)
+        message.error('Failed to get login url').then(r => console.log(r))
+      })
+      .finally(() => {
+        setChatAccountId(undefined)
+      })
   }
 
   const columns: ColumnsType<Account> = [
@@ -139,7 +145,7 @@ export default function SharePage() {
       align: 'center',
       width: 120,
       render: (text) => {
-        if (text === 'True') {
+        if (text === 1) {
           return (
             <Tooltip title={t('common.yes')}>
               <CheckCircleOutlined style={{ color: 'orange' }} />
@@ -163,7 +169,7 @@ export default function SharePage() {
       align: 'center',
       render: (_,record) => (
         <Button.Group>
-          <Button icon={<OpenAIFilled />} type={"primary"} onClick={() => handleQuickLogin(record)} style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}>Chat</Button>
+          <Button icon={<OpenAIFilled />} type={"primary"} onClick={() => handleQuickLogin(record)} loading={chatAccountId === record.id} style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}>Chat</Button>
           <Button icon={<EditOutlined />} type={"primary"} onClick={() => onEdit(record)}/>
           <Popconfirm title={t('token.deleteConfirm')} okText="Yes" cancelText="No" placement="left" onConfirm={() => handleDelete(record)}>
             <Button icon={<DeleteOutlined />} type={"primary"} loading={deleteRowKey == record.id + record.account}  danger/>
