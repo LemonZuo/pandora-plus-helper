@@ -4,7 +4,7 @@ import {
   Card,
   Col,
   Form,
-  Input,
+  Input, message,
   Popconfirm,
   Row,
   Space, Tooltip,
@@ -16,14 +16,15 @@ import {useEffect, useState} from 'react';
 import {Account} from '#/entity';
 import {
   CheckCircleOutlined, CloseCircleOutlined,
-  DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MinusCircleOutlined,
-} from "@ant-design/icons";
+  DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MinusCircleOutlined, OpenAIFilled,
+} from '@ant-design/icons';
 import {useQuery} from "@tanstack/react-query";
 import {useSearchParams} from "@/router/hooks";
 import accountService from "@/api/services/accountService.ts";
 import {useDeleteAccountMutation, useUpdateAccountMutation} from "@/store/accountStore.ts";
 import {AccountModal, AccountModalProps} from "src/pages/token/token";
 import {useTranslation} from "react-i18next";
+import CopyToClipboardInput from '@/pages/components/copy';
 type SearchFormFieldType = {
   tokenId?: number;
 };
@@ -65,13 +66,28 @@ export default function SharePage() {
     searchForm.setFieldValue('tokenId', params.get('tokenId'))
   }, [params]);
 
+  function handleQuickLogin(record: Account) {
+    accountService.chatAuthAccount(record)
+      .then((res) => {
+        const {loginUrl} = res;
+        if (loginUrl) {
+          window.open(loginUrl)
+        } else {
+          message.error('Failed to get login url').then(r => console.log(r))
+        }
+      }).catch((err) => {
+      console.log(err)
+      message.error('Failed to get login url').then(r => console.log(r))
+    })
+  }
+
   const columns: ColumnsType<Account> = [
     { title: t('token.tokenId'), dataIndex: 'tokenId', align: 'center', width: 80 },
     { title: 'Account', dataIndex: 'account', align: 'center', width: 120 },
     { title: t('token.password'), dataIndex: 'password', align: 'center', width: 120 },
     { title: 'ShareToken', dataIndex: 'shareToken', align: 'center',
       render: (text) => (
-        <Input value={text} readOnly/>
+        <CopyToClipboardInput text={text}/>
       ),
     },
     { title: t('token.gpt35Limit'),
@@ -147,6 +163,7 @@ export default function SharePage() {
       align: 'center',
       render: (_,record) => (
         <Button.Group>
+          <Button icon={<OpenAIFilled />} type={"primary"} onClick={() => handleQuickLogin(record)} style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}>Chat</Button>
           <Button icon={<EditOutlined />} type={"primary"} onClick={() => onEdit(record)}/>
           <Popconfirm title={t('token.deleteConfirm')} okText="Yes" cancelText="No" placement="left" onConfirm={() => handleDelete(record)}>
             <Button icon={<DeleteOutlined />} type={"primary"} loading={deleteRowKey == record.id + record.account}  danger/>

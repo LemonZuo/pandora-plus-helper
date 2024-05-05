@@ -8,7 +8,8 @@ export enum AccountApi {
   search = '/account/search',
   delete = '/account/delete',
   update = '/account/update',
-  statistic = '/account/statistic'
+  statistic = '/account/statistic',
+  chatAuth = '/auth',
 }
 
 const getAccountList = () => apiClient.get<Account[]>({ url: AccountApi.list });
@@ -18,6 +19,14 @@ const deleteAccount = (data: Account) => apiClient.post({ url: AccountApi.delete
 const searchAccount = (tokenId?: number) => apiClient.post({ url: AccountApi.search, data: {
   tokenId,
 }});
+
+const chatAuthAccount = (data: Account) => apiClient.post({
+  url: AccountApi.chatAuth,
+  data: {
+    type: 1,
+    password: data.password,
+  }
+});
 
 type AccountStatistic = {
   series: ApexAxisChartSeries;
@@ -32,5 +41,6 @@ export default {
   updateAccount,
   searchAccount,
   deleteAccount,
-  getAccountStatistic
+  getAccountStatistic,
+  chatAuthAccount
 };

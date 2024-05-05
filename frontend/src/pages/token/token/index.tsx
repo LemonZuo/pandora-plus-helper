@@ -40,6 +40,7 @@ import Chart from "@/components/chart/chart.tsx";
 import useChart from "@/components/chart/useChart.ts";
 import accountService from "@/api/services/accountService.ts";
 import {useTranslation} from "react-i18next";
+import CopyToClipboardInput from '@/pages/components/copy';
 
 type SearchFormFieldType = Pick<Token, 'tokenName'>;
 
@@ -160,14 +161,14 @@ export default function TokenPage() {
     },
     { title: t('token.refreshToken'), dataIndex: 'refreshToken', align: 'center',
       render: (text) => (
-        <Input value={text} readOnly/>
+        <CopyToClipboardInput text={text}/>
       ),
     },
     { title: t('token.accessToken'),
       dataIndex: 'accessToken',
       align: 'center',
       render: (text) => (
-        <Input value={text} readOnly/>
+        <CopyToClipboardInput text={text}/>
       ),
     },
     {
@@ -219,7 +220,7 @@ export default function TokenPage() {
               onSettled: () => setRefreshTokenId(undefined),
             })
           }}>
-            <Button key={record.id} icon={<ReloadOutlined/>} type={"primary"} loading={refreshTokenId === record.id}>
+            <Button key={record.id} icon={<ReloadOutlined/>} type={"primary"} loading={refreshTokenId === record.id} style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}>
               {t('common.refresh')}
             </Button>
           </Popconfirm>
