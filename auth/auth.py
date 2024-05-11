@@ -49,7 +49,7 @@ def auth():
         return ApiResponse.error('Captcha is failed', 401)
 
     if type == 1:
-        account = db.session.query(Account).filter_by(password=password).first()
+        account = db.session.query(Account).filter_by(password=password, status=1).first()
         if not account:
             # 账号不存在
             return ApiResponse.error('login failed！', 401)

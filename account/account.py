@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
@@ -50,9 +50,11 @@ def share_add():
     token_id = request.json.get('token_id')
     account = request.json.get('account')
     password = request.json.get('password')
+    expiration_time = datetime.strptime(request.json.get('expiration_time'), '%Y-%m-%d %H:%M:%S')
     gpt35_limit = request.json.get('gpt35_limit')
     gpt4_limit = request.json.get('gpt4_limit')
     show_conversations = request.json.get('show_conversations')
+    temporary_chat = request.json.get('temporary_chat')
 
     token = db.session.query(Token).filter_by(id=token_id).first()
 
@@ -61,7 +63,12 @@ def share_add():
             return ApiResponse.error('请先登录账号')
         else:
             try:
-                res = gen_share_token(access_token=token.access_token, unique_name=account,gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations == 1)
+                res = gen_share_token(access_token=token.access_token,
+                                      unique_name=account,
+                                      gpt35_limit=gpt35_limit,
+                                      gpt4_limit=gpt4_limit,
+                                      show_conversations=show_conversations == 1,
+                                      temporary_chat=temporary_chat == 1)
                 logger.info(res)
             except Exception as e:
                 logger.error(e)
@@ -75,15 +82,17 @@ def share_add():
             account_entity = Account(
                 account=account,
                 password=password,
+                status=1,
+                expiration_time=expiration_time,
                 token_id=token_id,
                 share_token=res.get('token_key'),
                 expire_at=expire_at,
                 create_time=now,
                 update_time=now,
-                status=1,
                 gpt35_limit=gpt35_limit,
                 gpt4_limit=gpt4_limit,
-                show_conversations=show_conversations
+                show_conversations=show_conversations,
+                temporary_chat=temporary_chat
             )
             logger.info(account_entity)
             db.session.add(account_entity)
@@ -107,7 +116,9 @@ def share_delete():
         return ApiResponse.error('请先登录账号')
     else:
         try:
-            res = gen_share_token(token.access_token, account.account, -1)
+            res = gen_share_token(access_token=token.access_token,
+                                  unique_name=account.account,
+                                  expires_in=-1)
             logger.info(res)
         except Exception as e:
             logger.error(e)
@@ -124,9 +135,11 @@ def share_update():
     token_id = request.json.get('token_id')
     account = request.json.get('account')
     password = request.json.get('password')
+    expiration_time = datetime.strptime(request.json.get('expiration_time'), '%Y-%m-%d %H:%M:%S')
     gpt35_limit = request.json.get('gpt35_limit')
     gpt4_limit = request.json.get('gpt4_limit')
     show_conversations = request.json.get('show_conversations')
+    temporary_chat = request.json.get('temporary_chat')
 
     account_entity = db.session.query(Account).filter_by(id=id).first()
     if not account_entity:
@@ -140,7 +153,12 @@ def share_update():
         return ApiResponse.error('请先登录账号')
     else:
         try:
-            res = gen_share_token(access_token=token.access_token, unique_name=account, gpt35_limit=gpt35_limit, gpt4_limit=gpt4_limit, show_conversations=show_conversations == 1)
+            res = gen_share_token(access_token=token.access_token,
+                                  unique_name=account,
+                                  gpt35_limit=gpt35_limit,
+                                  gpt4_limit=gpt4_limit,
+                                  show_conversations=show_conversations == 1,
+                                  temporary_chat=temporary_chat == 1)
             logger.info(res)
         except Exception as e:
             logger.error(e)
@@ -153,6 +171,7 @@ def share_update():
         account_entity.token_id = token_id
         account_entity.account = account
         account_entity.password = password
+        account_entity.expiration_time = expiration_time
         account_entity.share_token = res.get('token_key')
         account_entity.gpt35_limit = gpt35_limit
         account_entity.gpt4_limit = gpt4_limit
@@ -172,7 +191,7 @@ def share_info():
 
     if token.access_token is None:
         return ApiResponse.error('请先登录账号')
-    accounts = db.session.query(Account).filter_by(token_id=token_id).all()
+    accounts = db.session.query(Account).filter_by(token_id=token_id, status=1).all()
     unique_names = list(map(lambda x: x['account'], accounts))
     info_list = {}
     for account in accounts:
@@ -216,3 +235,85 @@ def share_info():
         "categories": unique_names,
         "series": series
     })
+
+
+@account_bp.route('/disable', methods=['POST'])
+@jwt_required()
+def disable_account():
+    id = request.json.get('id')
+
+    account = db.session.query(Account).filter_by(id=id).first()
+    if not account:
+        return ApiResponse.error('账号不存在')
+
+    token = db.session.query(Token).filter_by(id=account.token_id).first()
+    if not token:
+        return ApiResponse.error('令牌不存在')
+
+    if not token.access_token:
+        return ApiResponse.error('请先登录账号')
+    else:
+        try:
+            res = gen_share_token(access_token=token.access_token,
+                                  unique_name=account.account,
+                                  expires_in=-1,
+                                  gpt35_limit=account.gpt35_limit,
+                                  gpt4_limit=account.gpt4_limit,
+                                  show_conversations=account.show_conversations == 1,
+                                  temporary_chat=account.temporary_chat == 1)
+            logger.info(res)
+        except Exception as e:
+            logger.error(e)
+            return ApiResponse.error('生成分享用户失败')
+
+        now = datetime.now()
+        account.status = 0
+        account.expiration_time = now
+        account.expire_at = now
+        account.update_time = now
+        logger.info(account)
+        db.session.commit()
+        return ApiResponse.success({})
+
+
+@account_bp.route('/enable', methods=['POST'])
+@jwt_required()
+def enable_account():
+    id = request.json.get('id')
+
+    account = db.session.query(Account).filter_by(id=id).first()
+    if not account:
+        return ApiResponse.error('账号不存在')
+
+    token = db.session.query(Token).filter_by(id=account.token_id).first()
+    if not token:
+        return ApiResponse.error('令牌不存在')
+
+    if not token.access_token:
+        return ApiResponse.error('请先登录账号')
+    else:
+        try:
+            res = gen_share_token(access_token=token.access_token,
+                                  unique_name=account.account,
+                                  gpt35_limit=account.gpt35_limit,
+                                  gpt4_limit=account.gpt4_limit,
+                                  show_conversations=account.show_conversations == 1,
+                                  temporary_chat=account.temporary_chat == 1)
+            logger.info(res)
+        except Exception as e:
+            logger.error(e)
+            return ApiResponse.error('生成分享用户失败')
+        expire_at=datetime.fromtimestamp(res.get('expire_at'))
+        # 检查expire_at的类型是否正确
+        if not isinstance(expire_at, datetime):
+            raise TypeError(f"Expected datetime.datetime, got {type(expire_at)} instead.")
+
+        now = datetime.now()
+        account.share_token = res.get('token_key')
+        account.status = 1
+        account.expiration_time = now + timedelta(days=30)
+        account.expire_at = expire_at
+        account.update_time = now
+        logger.info(account)
+        db.session.commit()
+        return ApiResponse.success({})

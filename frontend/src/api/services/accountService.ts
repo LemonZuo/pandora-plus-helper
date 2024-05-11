@@ -10,16 +10,19 @@ export enum AccountApi {
   update = '/account/update',
   statistic = '/account/statistic',
   chatAuth = '/auth',
+  disable = '/account/disable',
+  enable = '/account/enable',
 }
 
-const getAccountList = () => apiClient.get<Account[]>({ url: AccountApi.list });
-const addAccount = (data: Account) => apiClient.post({ url: AccountApi.add, data });
-const updateAccount = (data: Account) => apiClient.post({ url: AccountApi.update, data });
-const deleteAccount = (data: Account) => apiClient.post({ url: AccountApi.delete, data });
-const searchAccount = (tokenId?: number) => apiClient.post({ url: AccountApi.search, data: {
-  tokenId,
-}});
-
+const getAccountList = () => apiClient.get<Account[]>({url: AccountApi.list});
+const addAccount = (data: Account) => apiClient.post({url: AccountApi.add, data});
+const updateAccount = (data: Account) => apiClient.post({url: AccountApi.update, data});
+const deleteAccount = (data: Account) => apiClient.post({url: AccountApi.delete, data});
+const searchAccount = (tokenId?: number) => apiClient.post({
+  url: AccountApi.search, data: {
+    tokenId,
+  }
+});
 const chatAuthAccount = (data: Account) => apiClient.post({
   url: AccountApi.chatAuth,
   data: {
@@ -27,13 +30,18 @@ const chatAuthAccount = (data: Account) => apiClient.post({
     password: data.password,
   }
 });
+const disableAccount = (data: Account) => apiClient.post({url: AccountApi.disable, data});
+const enableAccount = (data: Account) => apiClient.post({url: AccountApi.enable, data});
 
 type AccountStatistic = {
   series: ApexAxisChartSeries;
   categories: string[]
 }
 
-const getAccountStatistic = (tokenId: number) => apiClient.post<AccountStatistic>({ url: AccountApi.statistic, data: { tokenId } });
+const getAccountStatistic = (tokenId: number) => apiClient.post<AccountStatistic>({
+  url: AccountApi.statistic,
+  data: {tokenId}
+});
 
 export default {
   getAccountList,
@@ -42,5 +50,7 @@ export default {
   searchAccount,
   deleteAccount,
   getAccountStatistic,
-  chatAuthAccount
+  chatAuthAccount,
+  disableAccount,
+  enableAccount,
 };

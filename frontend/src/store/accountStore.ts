@@ -36,6 +36,28 @@ export const useDeleteAccountMutation = () => {
   })
 }
 
+export const useDisableAccountMutation = () => {
+  const client = useQueryClient();
+  return useMutation(accountService.disableAccount, {
+    onSuccess: () => {
+      /* onSuccess */
+      client.invalidateQueries(['shareList']);
+      // message.success('Success')
+    },
+  })
+}
+
+export const useEnableAccountMutation = () => {
+  const client = useQueryClient();
+  return useMutation(accountService.enableAccount, {
+    onSuccess: () => {
+      /* onSuccess */
+      client.invalidateQueries(['shareList']);
+      // message.success('Success')
+    },
+  })
+}
+
 export default {
   useAddAccountMutation,
   useDeleteAccountMutation,

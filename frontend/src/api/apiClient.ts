@@ -50,13 +50,11 @@ axiosInstance.interceptors.response.use(
     }
 
     // 业务请求错误
-    throw new Error(message || t('sys_info.api.apiRequestFailed'));
+    Message.error(message || t('sys_info.api.apiRequestFailed'), 5);
   },
   (error: AxiosError<Result>) => {
     const { response, message } = error || {};
-    if(response?.status === 444){
-      // Token失效，移除Token并跳转到登录页
-      Message.error("登录失效", 5);
+    if(response?.status === 444 || response?.status === 401) {
       removeItem(StorageEnum.Token);
       window.location.href = '#/login'
     }

@@ -15,13 +15,23 @@ import {useEffect, useState} from 'react';
 
 import {Account} from '#/entity';
 import {
-  CheckCircleOutlined, CloseCircleOutlined,
-  DeleteOutlined, EditOutlined, ExclamationCircleOutlined, MinusCircleOutlined, OpenAIFilled,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  MinusCircleOutlined,
+  OpenAIFilled,
+  StopOutlined,
 } from '@ant-design/icons';
 import {useQuery} from "@tanstack/react-query";
 import {useSearchParams} from "@/router/hooks";
 import accountService from "@/api/services/accountService.ts";
-import {useDeleteAccountMutation, useUpdateAccountMutation} from "@/store/accountStore.ts";
+import {
+  useDeleteAccountMutation, useDisableAccountMutation,
+  useEnableAccountMutation,
+  useUpdateAccountMutation,
+} from '@/store/accountStore.ts';
 import {AccountModal, AccountModalProps} from "src/pages/token/token";
 import {useTranslation} from "react-i18next";
 import CopyToClipboardInput from '@/pages/components/copy';
@@ -33,6 +43,8 @@ export default function SharePage() {
 
   const deleteShareMutation = useDeleteAccountMutation()
   const updateShareMutation = useUpdateAccountMutation()
+  const disableShareMutation = useDisableAccountMutation()
+  const enableShareMutation = useEnableAccountMutation()
 
   const {t} = useTranslation()
 
@@ -45,9 +57,12 @@ export default function SharePage() {
       tokenId: -1,
       account: '',
       password: '',
+      status: 1,
+      expirationTime: '',
       gpt35Limit: -1,
       gpt4Limit: -1,
       showConversations: 0,
+      temporaryChat: 0,
     },
     title: t('token.edit'),
     show: false,
@@ -91,7 +106,29 @@ export default function SharePage() {
     { title: t('token.tokenId'), dataIndex: 'tokenId', align: 'center', width: 80 },
     { title: 'Account', dataIndex: 'account', align: 'center', width: 120 },
     { title: t('token.password'), dataIndex: 'password', align: 'center', width: 120 },
-    { title: 'ShareToken', dataIndex: 'shareToken', align: 'center',
+    {
+      title: t('token.accountStatus'),
+      dataIndex: 'status',
+      align: 'center',
+      render: (status) => {
+        if (status === 0) {
+          return <Tooltip title={t('token.disable')}><CloseCircleOutlined style={{ color: 'red' }} /></Tooltip>;
+
+        } else if (status === 1) {
+          return <Tooltip title={t('token.normal')}><CheckCircleOutlined style={{ color: 'green' }} /></Tooltip>;
+        }
+      },
+    },
+    {
+      title: t('token.expirationTime'),
+      dataIndex: 'expirationTime',
+      align: 'center',
+      width: 200,
+    },
+    {
+      title: 'ShareToken',
+      dataIndex: 'shareToken',
+      align: 'center',
       render: (text) => (
         <CopyToClipboardInput text={text}/>
       ),
@@ -160,6 +197,27 @@ export default function SharePage() {
         }
       },
     },
+    {
+      title: t('token.temporaryChat'),
+      dataIndex: 'temporaryChat',
+      align: 'center',
+      width: 120,
+      render: (text) => {
+        if (text === 1) {
+          return (
+            <Tooltip title={t('common.yes')}>
+              <CheckCircleOutlined style={{ color: 'red' }} />
+            </Tooltip>
+          );
+        } else {
+          return (
+            <Tooltip title={t('common.no')}>
+              <CloseCircleOutlined style={{ color: 'green' }} />
+            </Tooltip>
+          );
+        }
+      },
+    },
     { title: t('token.expireAt'), dataIndex: 'expireAt', align: 'center', width: 200 },
     { title: t('token.createTime'), dataIndex: 'createTime', align: 'center', width: 200 },
     { title: t('token.updateTime'), dataIndex: 'updateTime', align: 'center', width: 200 },
@@ -169,7 +227,19 @@ export default function SharePage() {
       align: 'center',
       render: (_,record) => (
         <Button.Group>
-          <Button icon={<OpenAIFilled />} type={"primary"} onClick={() => handleQuickLogin(record)} loading={chatAccountId === record.id} style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}>Chat</Button>
+          {
+            record.status === 0 ? (<Tooltip title={t('token.enable')}><Button icon={<CheckCircleOutlined />} type="primary" onClick={() => handleEnable(record)}></Button></Tooltip>)
+            : record.status === 1 ? (<Tooltip title={t('token.disable')}><Button icon={<StopOutlined />} type="primary" danger onClick={() => handleDisable(record)}></Button></Tooltip>)
+            : null
+          }
+          <Button
+            icon={<OpenAIFilled />}
+            type={"primary"}
+            onClick={() => handleQuickLogin(record)}
+            loading={chatAccountId === record.id}
+            style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}
+            disabled={record.status !== 1}
+          >Chat</Button>
           <Button icon={<EditOutlined />} type={"primary"} onClick={() => onEdit(record)}/>
           <Popconfirm title={t('token.deleteConfirm')} okText="Yes" cancelText="No" placement="left" onConfirm={() => handleDelete(record)}>
             <Button icon={<DeleteOutlined />} type={"primary"} loading={deleteRowKey == record.id + record.account}  danger/>
@@ -208,6 +278,22 @@ export default function SharePage() {
     })
   }
 
+  const handleDisable = (record: Account) => {
+    disableShareMutation.mutate(record, {
+      onSuccess: () => {
+        message.success('Success')
+      }
+    })
+  }
+
+  const handleEnable = (record: Account) => {
+    enableShareMutation.mutate(record, {
+      onSuccess: () => {
+        message.success('Success')
+      }
+    })
+  }
+
   const { data } = useQuery({
     queryKey: ['shareList', tokenId],
     queryFn: () => {
@@ -232,14 +318,6 @@ export default function SharePage() {
             <Col span={21} lg={21}>
               <div className="flex justify-end">
                 <Button onClick={onSearchFormReset}>{t('token.reset')}</Button>
-                <Button type="primary" className="ml-4" onClick={() => {
-                  searchForm.validateFields().then((values) => {
-                    console.log(values)
-                    searchForm.submit()
-                  })
-                }}>
-                  {t('token.search')}
-                </Button>
               </div>
             </Col>
           </Row>

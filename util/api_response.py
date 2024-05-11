@@ -16,7 +16,7 @@ class ApiResponse:
         return jsonify({
             'status': status,
             'message': message
-        }), 500
+        }), status
 
     @staticmethod
     def unauthorized(message):

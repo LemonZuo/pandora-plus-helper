@@ -52,7 +52,7 @@ export const useUserActions = () => useUserStore((state) => state.actions);
 export const useSignIn = () => {
   const { t } = useTranslation();
   const navigatge = useNavigate();
-  const { notification, message } = App.useApp();
+  const { notification } = App.useApp();
   const { setUserToken, setUserInfo } = useUserActions();
 
   const signInMutation = useMutation(userService.signin);
@@ -77,10 +77,7 @@ export const useSignIn = () => {
       }
 
     } catch (err) {
-      message.warning({
-        content: err.message,
-        duration: 3,
-      });
+      console.log(err)
     }
   };
 

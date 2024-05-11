@@ -2,6 +2,8 @@ import json
 import os
 import string
 import secrets
+
+from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
 from datetime import date, datetime
 
@@ -18,6 +20,7 @@ from flask_moment import Moment
 import tokens
 import account
 import sys_info
+from task.task import refresh_all_token, disable_all_account
 from util.api_response import ApiResponse
 from util.share_tools import set_share_token_auth
 
@@ -173,9 +176,20 @@ def create_app():
     # 迁移应在应用上下文内进行
     with app.app_context():
         upgrade()
+    # 设置CronTrigger，每小时执行
+    token_trigger = CronTrigger(minute='0')
+    account_trigger = CronTrigger(minute='*/5')
+
+    # 添加定时任务
+    scheduler.add_job(func=refresh_all_token, trigger=token_trigger, id='token_job', replace_existing=True)
+    scheduler.add_job(func=disable_all_account, trigger=account_trigger, id='account_job', replace_existing=True)
+
+    # 如果调度器没有运行，则启动调度器
+    if not scheduler.running:
+        scheduler.start()
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=False)

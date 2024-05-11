@@ -66,11 +66,13 @@ export interface Account {
   id?: number;
   account: string;
   password: string;
+  status: 1 | 0;
+  expirationTime?: string;
   tokenId: number;
   gpt35Limit: number;
   gpt4Limit: number;
   showConversations: 0 | 1;
-  status?: string;
+  temporaryChat: 0 | 1;
   shareToken?: string;
   expireAt?: string;
   createTime?: string;

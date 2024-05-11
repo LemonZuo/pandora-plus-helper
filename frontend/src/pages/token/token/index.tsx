@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Col,
+  DatePicker,
   Form,
   Input,
   Modal,
@@ -19,14 +20,13 @@ import {useEffect, useState} from 'react';
 // import ProTag from '@/theme/antd/components/tag';
 import {Account, Token} from '#/entity';
 import {
-  CaretRightFilled, CheckCircleOutlined, DeleteOutlined,
+  CheckCircleOutlined, DeleteOutlined,
   EditOutlined, FundOutlined, MinusCircleOutlined,
-  PauseCircleFilled,
   PlusOutlined, QuestionCircleOutlined,
   ReloadOutlined,
   ShareAltOutlined
 } from "@ant-design/icons";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {useQuery} from "@tanstack/react-query";
 import tokenService, {TokenAddReq,} from "@/api/services/tokenService.ts";
 import {useNavigate} from "react-router-dom";
 import {useAddAccountMutation} from "@/store/accountStore.ts";
@@ -40,7 +40,17 @@ import Chart from "@/components/chart/chart.tsx";
 import useChart from "@/components/chart/useChart.ts";
 import accountService from "@/api/services/accountService.ts";
 import {useTranslation} from "react-i18next";
-import CopyToClipboardInput from '@/pages/components/copy';
+import CopyToClipboardInput from "@/pages/components/copy";
+import dayjs from "dayjs";
+import 'dayjs/locale/zh-cn';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.locale('zh-cn');
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 type SearchFormFieldType = Pick<Token, 'tokenName'>;
 
@@ -49,7 +59,6 @@ const { Option } = Select;
 export default function TokenPage() {
   const [searchForm] = Form.useForm();
   const {t} = useTranslation()
-  const client = useQueryClient();
 
   const addTokenMutation = useAddTokenMutation();
   const updateTokenMutation = useUpdateTokenMutation();
@@ -99,9 +108,12 @@ export default function TokenPage() {
       tokenId: -1,
       account: '',
       password: '',
+      status: 1,
+      expirationTime: '',
       gpt35Limit: -1,
       gpt4Limit: -1,
       showConversations: 0,
+      temporaryChat: 0,
     },
     title: 'New',
     show: false,
@@ -243,27 +255,6 @@ export default function TokenPage() {
     queryFn: () => tokenService.searchTokenList(searchEmail)
   })
 
-  const {data: taskStatus} = useQuery({
-    queryKey: ['taskStatus'],
-    queryFn: () => tokenService.statusTask(),
-  })
-
-  const startTask = useMutation(tokenService.startTask, {
-      onSuccess: () => {
-        client.invalidateQueries(['taskStatus']);
-        console.log('startTask success');
-      }
-    }
-  )
-
-  const stopTask = useMutation(tokenService.stopTask, {
-      onSuccess: () => {
-        client.invalidateQueries(['taskStatus']);
-        console.log('stopTask success');
-      }
-    }
-  )
-
   const onSearchFormReset = () => {
     searchForm.resetFields();
   };
@@ -290,9 +281,12 @@ export default function TokenPage() {
         tokenId: record.id,
         account: '',
         password: '',
+        status: 1,
+        expirationTime: '',
         gpt35Limit: -1,
         gpt4Limit: -1,
         showConversations: 0,
+        temporaryChat: 0,
       },
     }));
   }
@@ -335,9 +329,6 @@ export default function TokenPage() {
             <Col span={18} lg={18}>
               <div className="flex justify-end">
                 <Button onClick={onSearchFormReset}>{t('token.reset')}</Button>
-                <Button type="primary" className="ml-4">
-                  {t('token.search')}
-                </Button>
               </div>
             </Col>
           </Row>
@@ -348,7 +339,6 @@ export default function TokenPage() {
         title={t("token.accountList")}
         extra={
           <Space>
-            {taskStatus?.status ? <Button icon={<PauseCircleFilled/>} onClick={() => stopTask.mutate()}>{t("token.stop")}</Button> : <Button icon={<CaretRightFilled/>} onClick={() => startTask.mutate()}>{t("token.start")}</Button>}
             <Button type="primary" onClick={onCreate}>
               {t("token.createNew")}
             </Button>
@@ -387,22 +377,66 @@ export const AccountModal = ({title, show, isEdit, formValue, onOk, onCancel}: A
   const {t} = useTranslation()
 
   useEffect(() => {
-    form.setFieldsValue({...formValue});
-  }, [formValue, form]);
+    if (show) {
+      // 重建 moment 对象以确保时区和格式被正确处理
+      const expirationTimeWithZone = formValue.expirationTime
+        ? dayjs(formValue.expirationTime, 'YYYY-MM-DD HH:mm:ss').tz('Asia/Shanghai')
+        : dayjs().add(30, 'day').tz('Asia/Shanghai');
+
+      form.setFieldsValue({
+        ...formValue,
+        expirationTime: expirationTimeWithZone,
+      });
+    }
+  }, [formValue, show, form]);
+
+
 
   const onModalOk = () => {
     form.validateFields().then((values) => {
-      onOk(values, setLoading);
+      // 格式化日期时间数据
+      const formattedValues = {
+        ...values,
+        expirationTime: values.expirationTime ? dayjs(values.expirationTime).tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss') : null,
+      };
+      setLoading(true); // 显示加载状态
+      onOk(formattedValues, () => setLoading(false)); // 提交数据并在完成后关闭加载状态
+    }).catch(error => {
+      console.error('Validation error:', error);
     });
-  }
+  };
+
+  const handleResetFields = () => {
+    // 重置表单字段时，确保 expirationTime 也被设置为当前时间的 moment 对象
+    const defaultValues = {
+      id: -1,
+      tokenId: -1,
+      account: '',
+      password: '',
+      status: 1,
+      expirationTime: dayjs().add(30, 'day').tz('Asia/Shanghai'),
+      gpt35Limit: -1,
+      gpt4Limit: -1,
+      showConversations: 0,
+      temporaryChat: 0,
+    };
+
+    form.setFieldsValue(defaultValues);
+  };
 
   return (
-    <Modal title={title} open={show} onOk={onModalOk} onCancel={() => {
-      form.resetFields();
-      onCancel();
-    }} okButtonProps={{
-      loading: loading,
-    }} destroyOnClose={false}>
+    <Modal
+      title={title}
+      open={show}
+      onOk={onModalOk}
+      onCancel={() => {
+        handleResetFields();
+        onCancel();
+      }}
+      okButtonProps={{
+        loading: loading,
+      }} destroyOnClose={true}>
+
       <Form
         initialValues={formValue}
         form={form}
@@ -421,6 +455,14 @@ export const AccountModal = ({title, show, isEdit, formValue, onOk, onCancel}: A
         <Form.Item<Account> label={t('token.password')} name="password" required>
           <Input.Password/>
         </Form.Item>
+        <Form.Item label={t('token.expirationTime')} name="expirationTime" required>
+          <DatePicker
+            style={{ width: '100%' }}
+            format="YYYY-MM-DD HH:mm:ss"
+            disabledDate={current => current && current < dayjs().endOf('day')}
+            showTime={{ defaultValue: dayjs('00:00:00', 'HH:mm:ss') }}
+          />
+        </Form.Item>
         <Form.Item<Account> label={t('token.gpt35Limit')} name="gpt35Limit" required>
           <Input/>
         </Form.Item>
@@ -428,6 +470,12 @@ export const AccountModal = ({title, show, isEdit, formValue, onOk, onCancel}: A
           <Input/>
         </Form.Item>
         <Form.Item<Account> label={t('token.showConversations')} name="showConversations" initialValue={0} required>
+          <Select allowClear>
+            <Option value={1}>{t('common.yes')}</Option>
+            <Option value={0}>{t('common.no')}</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item<Account> label={t('token.temporaryChat')} name="temporaryChat" initialValue={0} required>
           <Select allowClear>
             <Option value={1}>{t('common.yes')}</Option>
             <Option value={0}>{t('common.no')}</Option>

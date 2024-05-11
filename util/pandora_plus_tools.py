@@ -40,7 +40,11 @@ def check_subscription_status(access_token):
     }
 
     response = requests.get(SUBSCRIPTION_CHECK_URL, None, headers=headers)
-    if response.status_code != 200:
+
+    if response.status_code != 200 and response.status_code != 401:
+        logger.info(f"check_subscription_status: 1, because of status code {response.status_code}")
+        return 1
+    elif response.status_code == 401:
         logger.info(f"check_subscription_status: 2, because of status code {response.status_code}")
         return 2
 
@@ -61,12 +65,7 @@ def check_subscription_status(access_token):
 
 
 # 刷新Access Token
-def refresh_by_token_id(token_id):
-    token = db.session.query(Token).filter_by(id=token_id).first()
-
-    if not token:
-        raise Exception('Token不存在')
-
+def refresh_by_token(token):
     try:
         res = gen_access_token(token.refresh_token)
     except Exception as e:
@@ -79,14 +78,19 @@ def refresh_by_token_id(token_id):
     db.session.commit()
 
     # 刷新关联的share_token
-    accounts = db.session.query(Account).filter_by(token_id=token_id).all()
+    accounts = db.session.query(Account).filter_by(token_id=token.id).all()
     if not accounts:
         return
     for account in accounts:
+        if account.status == 0:
+            continue
         try:
-            res = gen_share_token(access_token=token.access_token, unique_name=account.account,
-                                  gpt35_limit=account.gpt35_limit, gpt4_limit=account.gpt4_limit,
-                                  show_conversations=account.show_conversations == 1)
+            res = gen_share_token(access_token=token.access_token,
+                                  unique_name=account.account,
+                                  gpt35_limit=account.gpt35_limit,
+                                  gpt4_limit=account.gpt4_limit,
+                                  show_conversations=account.show_conversations == 1,
+                                  temporary_chat=account.temporary_chat == 1)
             expire_at = datetime.fromtimestamp(res.get('expire_at'))
             # 检查expire_at的类型是否正确
             if not isinstance(expire_at, datetime):
@@ -116,3 +120,44 @@ def refresh_subscription_status(token_id):
     token.plus_subscription = plus_subscription
 
     db.session.commit()
+
+
+# 禁用账号
+def disable_by_token_id(token_id):
+    token = db.session.query(Token).filter_by(id=token_id).first()
+
+    if not token:
+        logger.error('Token不存在')
+
+    # 关联的account
+    accounts = db.session.query(Account).filter_by(token_id=token_id).all()
+    if not accounts:
+        return
+    now = datetime.now()
+    for account in accounts:
+        # 如果账号已禁用或者未过期，则跳过
+        if account.status == 0 or account.expiration_time > now:
+            continue
+        try:
+            logger.info(f"开始禁用账号: {account.account}")
+            res = gen_share_token(access_token=token.access_token,
+                                  unique_name=account.account,
+                                  expires_in=-1,
+                                  gpt35_limit=account.gpt35_limit,
+                                  gpt4_limit=account.gpt4_limit,
+                                  show_conversations=account.show_conversations == 1,
+                                  temporary_chat=account.temporary_chat == 1)
+            logger.info(res)
+            logger.info(f"禁用账号成功: {account.account}")
+        except Exception as e:
+            logger.error(f"禁用账号失败: {account.account}", e)
+            return
+
+        now = datetime.now()
+        account.status = 0
+        account.expiration_time = now
+        account.expire_at = now
+        account.update_time = now
+        logger.info(account)
+        db.session.commit()
+
